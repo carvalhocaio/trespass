@@ -1,0 +1,24 @@
+{
+  "name": "@trespass/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@trespass/db": "workspace:*",
+    "@trespass/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@trespass/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
