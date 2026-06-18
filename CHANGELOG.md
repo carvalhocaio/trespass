@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-18
+
+### Added
+- Re-scan button on the scan results page — creates a new scan for the same repository and navigates to the fresh result immediately. Disabled while a scan is already running.
+
+### Fixed
+- Scan results page was blank because `GET /api/scans/:id` returned the raw scan row without joining the repository; it now includes `repo.fullName` and `repo.htmlUrl`.
+- `POST /api/scans` response was not wrapped in `{ scan }`, causing the dashboard to fail to navigate to the new scan page.
+
 ## [1.2.0] - 2026-06-18
 
 ### Added

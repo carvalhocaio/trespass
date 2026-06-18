@@ -50,13 +50,26 @@ export const scansRoute = new Hono<AppEnv>()
     const scanId = c.req.param("id");
     const db = createDb();
 
-    const [scanRow] = await db
-      .select()
+    const [row] = await db
+      .select({
+        id: scan.id,
+        repoId: scan.repoId,
+        status: scan.status,
+        summary: scan.summary,
+        error: scan.error,
+        startedAt: scan.startedAt,
+        finishedAt: scan.finishedAt,
+        repo: {
+          fullName: repository.fullName,
+          htmlUrl: repository.htmlUrl,
+        },
+      })
       .from(scan)
+      .leftJoin(repository, eq(scan.repoId, repository.id))
       .where(and(eq(scan.id, scanId), eq(scan.userId, user.id)))
       .limit(1);
 
-    if (!scanRow) {
+    if (!row) {
       throw new HTTPException(404, { message: "Scan not found" });
     }
 
@@ -66,7 +79,7 @@ export const scansRoute = new Hono<AppEnv>()
       .where(eq(finding.scanId, scanId))
       .orderBy(finding.severity, finding.file);
 
-    return c.json({ scan: scanRow, findings });
+    return c.json({ scan: row, findings });
   })
   // POST /api/scans — start a new scan (async — returns immediately)
   .post("/", async (c) => {
@@ -156,5 +169,5 @@ export const scansRoute = new Hono<AppEnv>()
       });
     });
 
-    return c.json(newScan, 201);
+    return c.json({ scan: newScan }, 201);
   });

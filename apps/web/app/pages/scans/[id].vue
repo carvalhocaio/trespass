@@ -11,6 +11,7 @@ import {
   KeyRound,
   Loader2,
   Package,
+  Play,
   Shield,
   Sparkles,
 } from "lucide-vue-next";
@@ -54,6 +55,7 @@ interface Scan {
   finishedAt: string | null;
   id: string;
   repo: { fullName: string; htmlUrl: string | null };
+  repoId: string;
   startedAt: string | null;
   status: "queued" | "running" | "done" | "error";
   summary: ScanSummary | null;
@@ -100,6 +102,25 @@ onUnmounted(() => {
     clearInterval(pollInterval);
   }
 });
+
+const rescanning = ref(false);
+
+async function rescan() {
+  if (!scan.value) {
+    return;
+  }
+  rescanning.value = true;
+  try {
+    const res = await $fetch<{ scan: { id: string } }>(`${BASE}/api/scans`, {
+      method: "POST",
+      body: { repoId: scan.value.repoId },
+      credentials: "include",
+    });
+    navigateTo(`/scans/${res.scan.id}`);
+  } catch {
+    rescanning.value = false;
+  }
+}
 
 const severityOrder: Severity[] = ["critical", "high", "medium", "low", "info"];
 
@@ -213,22 +234,32 @@ function elapsed(start: string | null, end: string | null): string {
               </span>
             </div>
           </div>
-          <a
-            v-if="scan.repo.htmlUrl"
-            :href="scan.repo.htmlUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="shrink-0"
-          >
+          <div class="flex items-center gap-2 shrink-0">
             <Button
-              variant="outline"
               size="sm"
-              class="border-border/50 font-mono text-xs gap-1.5"
+              class="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5"
+              :disabled="rescanning || scan.status === 'queued' || scan.status === 'running'"
+              @click="rescan"
             >
-              <ExternalLink class="h-3.5 w-3.5" />
-              GitHub
+              <Play class="h-3.5 w-3.5" />
+              {{ rescanning ? "Starting..." : "Re-scan" }}
             </Button>
-          </a>
+            <a
+              v-if="scan.repo.htmlUrl"
+              :href="scan.repo.htmlUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                class="border-border/50 font-mono text-xs gap-1.5"
+              >
+                <ExternalLink class="h-3.5 w-3.5" />
+                GitHub
+              </Button>
+            </a>
+          </div>
         </div>
 
         <!-- Status / summary bar -->
