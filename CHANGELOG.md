@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-18
+
+### Added
+- "Open GitHub Issue" button inside each expanded finding on the scan results page — opens a new tab on GitHub with title and body pre-filled (severity, category, file, snippet, remediation). Zero backend changes; uses GitHub's `/issues/new?title=&body=` pre-fill URL.
+
 ## [1.3.0] - 2026-06-18
 
 ### Added

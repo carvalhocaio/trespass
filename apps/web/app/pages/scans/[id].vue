@@ -8,6 +8,7 @@ import {
   Clock,
   Code2,
   ExternalLink,
+  Github,
   KeyRound,
   Loader2,
   Package,
@@ -120,6 +121,43 @@ async function rescan() {
   } catch {
     rescanning.value = false;
   }
+}
+
+function openIssue(f: Finding) {
+  const repo = scan.value?.repo.fullName;
+  if (!repo) {
+    return;
+  }
+
+  const title = `[Security] ${f.title}`;
+
+  const lines: (string | null)[] = [
+    `## 🔒 Security Finding: ${f.title}`,
+    "",
+    `**Severity:** \`${f.severity.toUpperCase()}\`  `,
+    `**Category:** ${f.category}  `,
+    f.file ? `**File:** \`${f.file}${f.line ? `:${f.line}` : ""}\`` : null,
+    "",
+    "### Description",
+    f.description,
+  ];
+
+  if (f.snippet) {
+    lines.push("", "### Code", "```", f.snippet, "```");
+  }
+
+  lines.push(
+    "",
+    "### Remediation",
+    f.remediation ?? "See finding description.",
+    "",
+    "---",
+    "*Reported by [Trespass](https://github.com/carvalhocaio/trespass) security scanner*"
+  );
+
+  const body = lines.filter((l) => l !== null).join("\n");
+  const url = `https://github.com/${repo}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 const severityOrder: Severity[] = ["critical", "high", "medium", "low", "info"];
@@ -430,6 +468,16 @@ function elapsed(start: string | null, end: string | null): string {
                       {{ f.remediation }}
                     </p>
                   </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="w-full gap-2 font-mono text-xs border-border/50 text-muted-foreground hover:text-foreground"
+                    @click.stop="openIssue(f)"
+                  >
+                    <Github class="h-3.5 w-3.5" />
+                    Open GitHub Issue
+                  </Button>
                 </div>
               </div>
             </div>
