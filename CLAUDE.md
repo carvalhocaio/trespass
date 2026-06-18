@@ -44,6 +44,7 @@ Skills are invoked with `/skill-name` in the Claude Code prompt. Some skills acc
 | `pr-description`  | `/pr-description`  | Generates a complete PR description                     |
 | `changelog`       | `/changelog`       | Generates or updates CHANGELOG.md                       |
 | `docs`            | `/docs`            | Generates or updates README and other .md docs          |
+| `version`         | `/version`         | Bumps version in root package.json (`patch`/`minor`/`major`) |
 
 ## Convention skills (auto-loaded)
 
@@ -72,17 +73,16 @@ When the user asks to version with the **full flow** (`versionar com o fluxo com
 
 ```
 /review              ← code review (Clean Code + SOLID), fix any critical/warning before continuing
-/changelog [vX.Y.Z]  ← generate or update CHANGELOG.md
+/version minor       ← bump version in root package.json (patch/minor/major)
+/changelog           ← generate or update CHANGELOG.md based on commits since last version
 /docs                ← update README.md and any affected .md docs
                         (bump Features, Configuration, or Usage sections as needed)
-version bump         ← update "version" field in root package.json to match the CHANGELOG version
-                        (the footer badge reads from this file via nuxt.config.ts)
 /commit              ← stage all changed files, suggest Conventional Commits message, ask for confirmation
-git push             ← push to origin after commit confirmation
+git push && git tag v<version> && git push --tags  ← push commit then create and push the version tag
 ```
 
 Rules:
-- All five steps are mandatory when "fluxo completo" is requested
+- All six steps are mandatory when "fluxo completo" is requested
 - `/security-review` is optional here unless the diff touches auth, I/O, or secrets
-- Never push without a preceding `/commit` confirmation in the same flow
-- If `/review` finds critical findings, fix them before proceeding to changelog
+- Never push or tag without a preceding `/commit` confirmation in the same flow
+- If `/review` finds critical findings, fix them before proceeding to version bump
