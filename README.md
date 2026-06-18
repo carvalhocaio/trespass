@@ -119,6 +119,7 @@ trespass/
 │   ├── db/               # Drizzle schema + migrations
 │   ├── env/              # Validated env vars (Zod)
 │   └── github/           # Octokit wrapper
+└── tests/                # Vitest suite — unit, integration, functional, security, smoke
 ```
 
 ## Scripts
@@ -132,8 +133,17 @@ trespass/
 | `pnpm db:generate` | Generate Drizzle migration files |
 | `pnpm db:migrate` | Run pending migrations |
 | `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm test` | Run full test suite |
 | `pnpm check` | Biome lint + format check |
 | `pnpm fix` | Biome lint + format autofix |
+
+## Tests
+
+```bash
+pnpm test          # run all 108 tests across the suite
+```
+
+Tests run automatically on every pull request and push to main via GitHub Actions. No database required — all external I/O is mocked.
 
 ## Local PostgreSQL (Docker)
 

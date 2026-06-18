@@ -1,6 +1,6 @@
 {
   "name": "trespass",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -19,6 +19,7 @@
     "db:migrate": "turbo -F @trespass/db db:migrate",
     "check": "ultracite check",
     "fix": "ultracite fix",
+    "test": "turbo test",
     "prepare": "husky"
   },
   "dependencies": {

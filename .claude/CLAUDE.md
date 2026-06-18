@@ -39,7 +39,7 @@ Rules:
 - `packages/github/` isolates all GitHub API I/O — scanner never uses Octokit directly
 - `HTTPException` never leaves `routes/`
 
-## Pydantic models → Zod / TypeScript types
+## Zod / TypeScript types
 
 - All public API boundaries validate input with `zod`
 - Prefer `interface` for public contracts, `type` for aliases and unions

@@ -77,7 +77,9 @@ interface NpmPackageJson {
   devDependencies?: Record<string, string>;
 }
 
-function parseNpmDeps(content: string): { name: string; version: string }[] {
+export function parseNpmDeps(
+  content: string
+): { name: string; version: string }[] {
   try {
     const pkg = JSON.parse(content) as NpmPackageJson;
     const all = {
@@ -95,7 +97,9 @@ function parseNpmDeps(content: string): { name: string; version: string }[] {
 
 // ─── Python (requirements.txt) ────────────────────────────────────────────────
 
-function parsePythonDeps(content: string): { name: string; version: string }[] {
+export function parsePythonDeps(
+  content: string
+): { name: string; version: string }[] {
   return content
     .split("\n")
     .map((line) => line.trim())

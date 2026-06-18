@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-18
+
+### Improved
+- GitHub Actions CI pipeline now runs typecheck, lint, and 108 automated tests on every pull request and push to main. (#d61d394)
+- GitHub Actions release workflow automatically creates a GitHub Release with notes on every version tag push. (#d61d394)
+
 ## [1.5.1] - 2026-06-18
 
 ### Improved

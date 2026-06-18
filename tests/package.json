@@ -1,0 +1,19 @@
+{
+  "name": "tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:bench": "vitest bench"
+  },
+  "devDependencies": {
+    "@trespass/crypto": "workspace:*",
+    "@trespass/auth": "workspace:*",
+    "@trespass/db": "workspace:*",
+    "@trespass/env": "workspace:*",
+    "@trespass/github": "workspace:*",
+    "hono": "^4.8.2",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "types": ["vitest/globals"],
+    "paths": {
+      "@server/*": ["../apps/server/src/*"]
+    }
+  },
+  "include": ["**/*.ts"]
+}
