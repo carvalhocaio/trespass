@@ -11,7 +11,6 @@ import { z } from "zod";
 import type { AppEnv } from "../types";
 
 const crypto = createCrypto(env.SECRET_ENCRYPTION_KEY);
-const db = createDb();
 
 const secretsUpdateSchema = z.object({
   githubPat: z.string().min(1).optional(),
@@ -24,9 +23,9 @@ export const secretsRoute = new Hono<AppEnv>()
   // GET /api/me/secrets/status — returns flags only, never plaintext
   .get("/status", async (c) => {
     const user = c.get("user");
-    const db2 = createDb();
+    const db = createDb();
 
-    const [secret] = await db2
+    const [secret] = await db
       .select()
       .from(userSecret)
       .where(eq(userSecret.userId, user.id))
@@ -42,6 +41,7 @@ export const secretsRoute = new Hono<AppEnv>()
   // PUT /api/me/secrets — upsert encrypted credentials
   .put("/", async (c) => {
     const user = c.get("user");
+    const db = createDb();
     const body = await c.req.json().catch(() => null);
     const parsed = secretsUpdateSchema.safeParse(body);
 

@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { Toaster } from "vue-sonner";
+</script>
 
 <template>
   <NuxtAnnouncer />
@@ -7,5 +9,7 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-  <Sonner position="bottom-right" rich-colors />
+  <ClientOnly>
+    <Toaster position="bottom-right" rich-colors />
+  </ClientOnly>
 </template>

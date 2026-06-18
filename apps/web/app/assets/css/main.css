@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap");
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Host Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     "Geist Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
   --font-heading: var(--font-sans);

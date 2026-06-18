@@ -166,7 +166,7 @@ const PATTERNS: SastPattern[] = [
     remediation:
       "Never interpolate user content into the system prompt. Use the user/assistant message turns for user input. Apply input validation if dynamic system prompts are required.",
     regex:
-      /system\s*[=:]\s*[`].*?\$\{.*?(?:req|request|input|user|body|query|param)/s,
+      /system\s*[=:]\s*[`].*\$\{.*(?:req|request|input|user|body|query|param)/,
     extensions: ["ts", "js", "tsx", "jsx", "py"],
   },
   {

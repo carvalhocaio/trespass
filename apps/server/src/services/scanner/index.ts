@@ -229,9 +229,7 @@ export async function runScan(input: ScanInput): Promise<void> {
         ]
           .filter(Boolean)
           .join("\n"),
-        file: manifests.find((m) => m.type === vuln.packageName)
-          ? "package.json"
-          : null,
+        file: vuln.ecosystem === "npm" ? "package.json" : "requirements.txt",
         line: null,
         snippet: null,
         remediation: vuln.remediation,

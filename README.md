@@ -1,77 +1,147 @@
-# trespass
+# Trespass
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Nuxt, Hono, and more.
+> GitHub repository security scanner — find hardcoded secrets, vulnerable dependencies, SAST issues, and LLM prompt injection vectors in your repos.
+
+Trespass connects to your GitHub account, downloads repository content via the GitHub API, and runs four analysis layers:
+
+1. **Secrets detection** — regex + entropy patterns for API keys, tokens, PEM keys, and common credential prefixes
+2. **Dependency auditing** — queries [OSV.dev](https://osv.dev) for known CVEs in `package.json` and `requirements.txt`
+3. **SAST patterns** — SQL injection, `eval()`, command injection, XSS vectors, weak cryptography, and LLM prompt injection patterns
+4. **LLM review** _(optional)_ — sends flagged code snippets to your own model (OpenAI, Anthropic, or Google) for enriched findings and remediation advice
+
+Findings are persisted per scan and exposed through a dark-themed UI with per-severity breakdown and expandable code snippets.
 
 ## Features
 
-- **TypeScript** - For type safety and improved developer experience
-- **Nuxt** - The Intuitive Vue Framework
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Hono** - Lightweight, performant server framework
-- **Node.js** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
-- **Biome** - Linting and formatting
-- **Husky** - Git hooks for code quality
-- **Turborepo** - Optimized monorepo build system
+- GitHub OAuth login (Better-Auth)
+- AES-256-GCM encrypted storage for GitHub PATs and LLM API keys
+- Fire-and-forget background scan — no blocking on the HTTP request
+- Per-scan finding history with status tracking (`queued → running → done | error`)
+- LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers
+- Semantic versioning badge in the UI footer
 
-## Getting Started
+## Tech stack
 
-First, install the dependencies:
+- **Frontend**: Nuxt 4 · Vue 3 · shadcn-vue · Tailwind CSS v4
+- **Backend**: Hono · Node.js
+- **Database**: PostgreSQL (tested on [Neon](https://neon.tech)) · Drizzle ORM
+- **Auth**: Better-Auth with GitHub OAuth
+- **Monorepo**: pnpm workspaces · Turborepo
+- **Linting**: Biome (ultracite ruleset)
+
+## Prerequisites
+
+- Node.js 22+
+- pnpm 11+
+- PostgreSQL 15+ (or a Neon connection string)
+- A GitHub OAuth App (Client ID + Secret)
+
+## Installation
 
 ```bash
+git clone <repo>
+cd trespass
 pnpm install
 ```
 
-## Database Setup
-
-This project uses PostgreSQL with Drizzle ORM.
-
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
+Copy and fill in the environment files:
 
 ```bash
-pnpm run db:push
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
-Then, run the development server:
+Push the database schema:
 
 ```bash
-pnpm run dev
+pnpm db:push
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+Start the development servers:
 
-## Git Hooks and Formatting
+```bash
+pnpm dev
+```
 
-- Initialize hooks: `pnpm run prepare`
-- Run checks: `pnpm run check`
+- Frontend: http://localhost:3001
+- API: http://localhost:3000
 
-## Project Structure
+## Configuration
+
+### `apps/server/.env`
+
+| Variable | Description | Required |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `BETTER_AUTH_SECRET` | 32+ character secret for session signing | Yes |
+| `BETTER_AUTH_URL` | Public URL of the API server | Yes |
+| `GITHUB_CLIENT_ID` | GitHub OAuth App client ID | Yes |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret | Yes |
+| `SECRET_ENCRYPTION_KEY` | 64-character hex key for AES-256-GCM | Yes |
+
+Generate a `SECRET_ENCRYPTION_KEY`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### `apps/web/.env`
+
+| Variable | Description | Required |
+|---|---|---|
+| `NUXT_PUBLIC_SERVER_URL` | Public URL of the API server | Yes |
+
+### Creating a GitHub OAuth App
+
+Go to **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**:
+
+- **Homepage URL**: `http://localhost:3001`
+- **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+
+## Project structure
 
 ```
 trespass/
 ├── apps/
-│   ├── web/         # Frontend application (Nuxt)
-│   └── server/      # Backend API (Hono)
+│   ├── web/              # Nuxt 4 frontend
+│   └── server/           # Hono API
+│       └── src/
+│           ├── routes/   # repos, scans, secrets
+│           ├── services/
+│           │   └── scanner/  # scan engine layers
+│           └── middleware/
 ├── packages/
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
+│   ├── auth/             # Better-Auth configuration
+│   ├── crypto/           # AES-256-GCM encrypt/decrypt
+│   ├── db/               # Drizzle schema + migrations
+│   ├── env/              # Validated env vars (Zod)
+│   └── github/           # Octokit wrapper
+└── agent/                # Python adversarial probe agent (v2)
 ```
 
-## Available Scripts
+## Scripts
 
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
-- `pnpm run check`: Run Biome formatting and linting
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start all apps in watch mode |
+| `pnpm build` | Build all apps |
+| `pnpm check-types` | TypeScript type check across all packages |
+| `pnpm db:push` | Push schema to database (no migration files) |
+| `pnpm db:generate` | Generate Drizzle migration files |
+| `pnpm db:migrate` | Run pending migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm check` | Biome lint + format check |
+| `pnpm fix` | Biome lint + format autofix |
+
+## Local PostgreSQL (Docker)
+
+```bash
+docker compose up -d
+# DATABASE_URL=postgresql://postgres:password@localhost:5432/postgres
+```
+
+## Python agent (v2)
+
+The `agent/` directory contains a Python/FastAPI service powered by Google ADK that generates adversarial prompt injection probes against LLM endpoints. It is not used in v1 — it will be integrated in a future release as an additional scan layer for repositories that expose LLM APIs.
+
+See [`agent/README.md`](agent/README.md) for standalone usage.

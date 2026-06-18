@@ -8,7 +8,6 @@ const route = useRoute();
 const navLinks = [
   { label: "Dashboard", to: "/dashboard" },
   { label: "Repos", to: "/repos" },
-  { label: "Scans", to: "/scans" },
 ];
 </script>
 

@@ -147,7 +147,13 @@ export const scansRoute = new Hono<AppEnv>()
         defaultBranch: repo.defaultBranch,
         pat,
         llmConfig,
-      }).catch(console.error);
+      }).catch(async (err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        await createDb()
+          .update(scan)
+          .set({ status: "error", error: message, finishedAt: new Date() })
+          .where(eq(scan.id, scanId));
+      });
     });
 
     return c.json(newScan, 201);

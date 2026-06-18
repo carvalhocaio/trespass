@@ -25,6 +25,9 @@ useHead({
 });
 
 const { $authClient } = useNuxtApp();
+const {
+  public: { version },
+} = useRuntimeConfig();
 const session = $authClient.useSession();
 
 const scanCategories = [
@@ -328,6 +331,10 @@ const steps = [
           >
           <span>·</span>
           <span>Open source security scanner</span>
+          <span>·</span>
+          <span class="font-mono text-xs text-muted-foreground/60"
+            >v{{ version }}</span
+          >
         </div>
         <div class="flex items-center gap-4 text-xs text-muted-foreground">
           <a

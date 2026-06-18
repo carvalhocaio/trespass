@@ -1,11 +1,12 @@
 import type { PackageManifest } from "@trespass/github";
 
-const NPM_VERSION_STRIP_RE = /^[^~>=]*/;
+const NPM_VERSION_STRIP_RE = /^[^\d]*/;
 const PY_DEP_RE = /^([A-Za-z0-9_\-.]+)[>=<!~^]+([A-Za-z0-9._*]+)/;
 
 export interface DepsVuln {
   cveId: string | null;
   description: string;
+  ecosystem: "npm" | "python";
   fixedIn: string | null;
   installedVersion: string;
   packageName: string;
@@ -74,7 +75,6 @@ function findCve(vuln: OsvVuln): string | null {
 interface NpmPackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
 }
 
 function parseNpmDeps(content: string): { name: string; version: string }[] {
@@ -169,16 +169,19 @@ export async function auditDependencies(
   );
 
   const packages: { name: string; version: string; ecosystem: string }[] = [];
+  const ecosystemByName = new Map<string, "npm" | "python">();
 
   if (npmManifest) {
     for (const dep of parseNpmDeps(npmManifest.content)) {
       packages.push({ ...dep, ecosystem: "npm" });
+      ecosystemByName.set(dep.name, "npm");
     }
   }
 
   if (pyManifest) {
     for (const dep of parsePythonDeps(pyManifest.content)) {
       packages.push({ ...dep, ecosystem: "PyPI" });
+      ecosystemByName.set(dep.name, "python");
     }
   }
 
@@ -191,12 +194,14 @@ export async function auditDependencies(
 
   for (const [key, vulns] of osvResults) {
     const [pkgName, version] = key.split("@") as [string, string];
+    const ecosystem = ecosystemByName.get(pkgName) ?? "npm";
 
     for (const vuln of vulns) {
       const fixed = fixedVersion(vuln);
       findings.push({
         packageName: pkgName,
         installedVersion: version,
+        ecosystem,
         severity: parseSeverity(vuln),
         title: vuln.summary ?? `Vulnerability in ${pkgName}`,
         description:
