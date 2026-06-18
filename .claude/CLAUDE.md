@@ -1,126 +1,78 @@
-# Ultracite Code Standards
+# Trespass — Python Project Standards
 
-This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.
+This project is an adversarial prompt-injection testing agent. The Python service exposes a FastAPI endpoint that receives a `PromptInjectionRequest`, runs a multi-turn attack campaign via Google ADK against the target LLM, and returns a `PromptInjectionResult`.
 
-## Quick Reference
+Apply these standards whenever you write or review code in this project.
 
-- **Format code**: `pnpm dlx ultracite fix`
-- **Check for issues**: `pnpm dlx ultracite check`
-- **Diagnose setup**: `pnpm dlx ultracite doctor`
+## Tooling
 
-Biome (the underlying engine) provides robust linting and formatting. Most issues are automatically fixable.
+- Package manager: `uv` — never use `pip install` directly
+- Formatter: `ruff format`
+- Linter: `ruff check --fix`
+- Type checker: `mypy --strict`
+- Tests: `pytest` with `pytest-asyncio` (`asyncio_mode = "auto"`)
+- Line length: **100 characters** (configured in `pyproject.toml`)
 
----
+Run before considering any file done:
 
-## Core Principles
+```bash
+cd agent && uv run ruff check --fix src/ && uv run ruff format src/ && uv run mypy src/
+```
 
-Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
+## Layer architecture
 
-### Type Safety & Explicitness
+```
+api/          ← FastAPI routes — HTTP parsing and response only
+attacker/     ← ADK agent that generates attack probes
+orchestrator/ ← multi-turn loop logic (crescendo, budget control)
+detectors/    ← canary detection, stop-reason evaluation
+targets/      ← httpx client that calls the target endpoint
+models.py     ← public boundary: PromptInjectionRequest / PromptInjectionResult
+config.py     ← Settings via pydantic-settings, injected from env
+```
 
-- Use explicit types for function parameters and return values when they enhance clarity
-- Prefer `unknown` over `any` when the type is genuinely unknown
-- Use const assertions (`as const`) for immutable values and literal types
-- Leverage TypeScript's type narrowing instead of type assertions
-- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+Rules:
+- `api/` contains no business logic — delegates to `orchestrator/`
+- `orchestrator/` is HTTP-agnostic — no `Request`/`Response` imports from FastAPI
+- `targets/` isolates all external I/O — the orchestrator never uses httpx directly
 
-### Modern JavaScript/TypeScript
+## Pydantic models
 
-- Use arrow functions for callbacks and short functions
-- Prefer `for...of` loops over `.forEach()` and indexed `for` loops
-- Use optional chaining (`?.`) and nullish coalescing (`??`) for safer property access
-- Prefer template literals over string concatenation
-- Use destructuring for object and array assignments
-- Use `const` by default, `let` only when reassignment is needed, never `var`
+- All public API boundaries use `model_config = ConfigDict(extra="ignore")` to tolerate version skew between this service and Hono
+- `SecretStr` for all credentials — never plain `str`
+- `Field(...)` with `description=` on all public model fields
+- Enums as `str, Enum` subclasses — `str` serialization is deliberate
 
-### Async & Promises
+## Google ADK
 
-- Always `await` promises in async functions - don't forget to use the return value
-- Use `async/await` syntax instead of promise chains for better readability
-- Handle errors appropriately in async code with try-catch blocks
-- Don't use async functions as Promise executors
+- Use `google-adk` (GA 2.x) for adversarial probe generation
+- The ADK agent lives in `attacker/agent.py` — keep it isolated from `api/`
+- Configuration (model name, API key) is always read from `Settings` — never hardcoded
+- `attacker_model` default is `gemini-flash-latest`; the key is `TRESPASS_GEMINI_API_KEY`
 
-### React & JSX
+## Attack loop limits
 
-- Use function components over class components
-- Call hooks at the top level only, never conditionally
-- Specify all dependencies in hook dependency arrays correctly
-- Use the `key` prop for elements in iterables (prefer unique IDs over array indices)
-- Nest children between opening and closing tags instead of passing as props
-- Don't define components inside other components
-- Use semantic HTML and ARIA attributes for accessibility:
-  - Provide meaningful alt text for images
-  - Use proper heading hierarchy
-  - Add labels for form inputs
-  - Include keyboard event handlers alongside mouse events
-  - Use semantic elements (`<button>`, `<nav>`, etc.) instead of divs with roles
+- `max_turns` hard ceiling: 1–20 (enforced by `Settings.max_turns`); request overrides respected only downward
+- `target_timeout_seconds`: timeout for each individual call to the target
+- `run_budget_seconds`: total wall-clock ceiling for the whole loop — seatbelt beyond `max_turns`
 
-### Error Handling & Debugging
+## Async
 
-- Remove `console.log`, `debugger`, and `alert` statements from production code
-- Throw `Error` objects with descriptive messages, not strings or other values
-- Use `try-catch` blocks meaningfully - don't catch errors just to rethrow them
-- Prefer early returns over nested conditionals for error cases
+- I/O-bound functions are `async def`
+- Never `time.sleep()` inside `async def` — use `asyncio.sleep()`
+- Use `asyncio.gather()` for independent concurrent coroutines
+- Never mix blocking I/O inside `async def` without `run_in_executor`
 
-### Code Organization
+## Error handling
 
-- Keep functions focused and under reasonable cognitive complexity limits
-- Extract complex conditions into well-named boolean variables
-- Use early returns to reduce nesting
-- Prefer simple conditionals over nested ternary operators
-- Group related code together and separate concerns
-
-### Security
-
-- Add `rel="noopener"` when using `target="_blank"` on links
-- Avoid `dangerouslySetInnerHTML` unless absolutely necessary
-- Don't use `eval()` or assign directly to `document.cookie`
-- Validate and sanitize user input
-
-### Performance
-
-- Avoid spread syntax in accumulators within loops
-- Use top-level regex literals instead of creating them in loops
-- Prefer specific imports over namespace imports
-- Avoid barrel files (index files that re-export everything)
-- Use proper image components (e.g., Next.js `<Image>`) over `<img>` tags
-
-### Framework-Specific Guidance
-
-**Next.js:**
-
-- Use Next.js `<Image>` component for images
-- Use `next/head` or App Router metadata API for head elements
-- Use Server Components for async data fetching instead of async Client Components
-
-**React 19+:**
-
-- Use ref as a prop instead of `React.forwardRef`
-
-**Solid/Svelte/Vue/Qwik:**
-
-- Use `class` and `for` attributes (not `className` or `htmlFor`)
-
----
+- Create domain exceptions per module (`class TargetTimeoutError(Exception)`)
+- Never `except Exception: pass` or `except Exception: raise`
+- Map domain errors to HTTP status codes only in the route layer
+- `HTTPException` never leaves `api/`
 
 ## Testing
 
-- Write assertions inside `it()` or `test()` blocks
-- Avoid done callbacks in async tests - use async/await instead
-- Don't use `.only` or `.skip` in committed code
-- Keep test suites reasonably flat - avoid excessive `describe` nesting
-
-## When Biome Can't Help
-
-Biome's linter will catch most issues automatically. Focus your attention on:
-
-1. **Business logic correctness** - Biome can't validate your algorithms
-2. **Meaningful naming** - Use descriptive names for functions, variables, and types
-3. **Architecture decisions** - Component structure, data flow, and API design
-4. **Edge cases** - Handle boundary conditions and error states
-5. **User experience** - Accessibility, performance, and usability considerations
-6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
-
----
-
-Most formatting and common issues are automatically fixed by Biome. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+- Use `respx` to mock `httpx` calls — never make real network calls in unit tests
+- `asyncio_mode = "auto"` means no `@pytest.mark.asyncio` decorator needed
+- Call `get_settings.cache_clear()` in tests that override environment variables
+- `tests/` mirrors `src/trespass_agent/` — one test file per module
