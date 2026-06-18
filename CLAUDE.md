@@ -65,3 +65,22 @@ tech-lead
 ```
 
 For releases: `changelog` → `docs` (if needed) → `commit`.
+
+## Versioning flow ("fluxo completo")
+
+When the user asks to version with the **full flow** (`versionar com o fluxo completo`), execute every step in order — no skipping:
+
+```
+/review              ← code review (Clean Code + SOLID), fix any critical/warning before continuing
+/changelog [vX.Y.Z]  ← generate or update CHANGELOG.md
+/docs                ← update README.md and any affected .md docs
+                        (bump Features, Configuration, or Usage sections as needed)
+/commit              ← stage all changed files, suggest Conventional Commits message, ask for confirmation
+git push             ← push to origin after commit confirmation
+```
+
+Rules:
+- All five steps are mandatory when "fluxo completo" is requested
+- `/security-review` is optional here unless the diff touches auth, I/O, or secrets
+- Never push without a preceding `/commit` confirmation in the same flow
+- If `/review` finds critical findings, fix them before proceeding to changelog
