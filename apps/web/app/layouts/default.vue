@@ -1,10 +1,10 @@
-<script setup></script>
+<script setup lang="ts"></script>
 
 <template>
-  <div>
+  <div class="min-h-screen flex flex-col">
     <Header />
-    <UMain>
+    <main class="flex-1">
       <slot />
-    </UMain>
+    </main>
   </div>
 </template>

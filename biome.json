@@ -25,7 +25,11 @@
       "!**/.svelte-kit",
       "!**/wrangler.jsonc",
       "!**/.source",
-      "!**/convex/_generated"
+      "!**/convex/_generated",
+      "!**/components/ui",
+      "!**/app/lib/utils.ts",
+      "!agent/.venv",
+      "!agent/**/__pycache__"
     ]
   },
   "formatter": {
@@ -92,11 +96,45 @@
         "rules": {
           "style": {
             "useConst": "off",
-            "useImportType": "off"
+            "useImportType": "off",
+            "useFilenamingConvention": "off"
           },
           "correctness": {
             "noUnusedVariables": "off",
-            "noUnusedImports": "off"
+            "noUnusedImports": "off",
+            "noUndeclaredVariables": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/app.config.ts",
+        "**/nuxt.config.ts",
+        "**/app/middleware/**",
+        "**/app/plugins/**",
+        "**/app/composables/**",
+        "**/app/server/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "off"
+          },
+          "correctness": {
+            "noUndeclaredVariables": "off",
+            "noUnusedFunctionParameters": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/packages/db/src/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off",
+            "noNamespaceImport": "off"
           }
         }
       }

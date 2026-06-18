@@ -1,8 +1,15 @@
+import { serve } from "@hono/node-server";
 import { auth } from "@trespass/auth";
 import { env } from "@trespass/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
+import { requireAuth } from "./middleware/auth";
+import { reposRoute } from "./routes/repos";
+import { scansRoute } from "./routes/scans";
+import { secretsRoute } from "./routes/secrets";
+import type { AppEnv } from "./types";
 
 const app = new Hono();
 
@@ -11,24 +18,26 @@ app.use(
   "/*",
   cors({
     origin: env.CORS_ORIGIN,
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
+// Auth handler (Better-Auth handles its own session)
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+// Protected API routes — all require a valid session
+const api = new Hono<AppEnv>().use("/*", requireAuth);
+
+api.route("/me/secrets", secretsRoute);
+api.route("/repos", reposRoute);
+api.route("/scans", scansRoute);
+
+app.route("/api", api);
 
 app.get("/", (c) => c.text("OK"));
 
-import { serve } from "@hono/node-server";
-
-serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
-  }
-);
+serve({ fetch: app.fetch, port: 3000 }, (info) => {
+  console.log(`Server running on http://localhost:${info.port}`);
+});

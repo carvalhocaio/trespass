@@ -3,10 +3,9 @@
 <template>
   <NuxtAnnouncer />
   <NuxtRouteAnnouncer />
-  <NuxtLoadingIndicator />
-  <UApp>
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
-  </UApp>
+  <NuxtLoadingIndicator color="#22c55e" />
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
+  <Sonner position="bottom-right" rich-colors />
 </template>
