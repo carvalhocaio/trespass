@@ -15,6 +15,9 @@ jobs:
     name: Typecheck · Lint · Test
     runs-on: ubuntu-latest
 
+    env:
+      NUXT_PUBLIC_SERVER_URL: http://localhost:3000
+
     steps:
       - uses: actions/checkout@v4
 
