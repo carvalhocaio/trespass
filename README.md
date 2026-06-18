@@ -119,7 +119,6 @@ trespass/
 │   ├── db/               # Drizzle schema + migrations
 │   ├── env/              # Validated env vars (Zod)
 │   └── github/           # Octokit wrapper
-└── agent/                # Python adversarial probe agent (v2)
 ```
 
 ## Scripts
@@ -143,8 +142,3 @@ docker compose up -d
 # DATABASE_URL=postgresql://postgres:password@localhost:5432/postgres
 ```
 
-## Python agent (v2)
-
-The `agent/` directory contains a Python/FastAPI service powered by Google ADK that generates adversarial prompt injection probes against LLM endpoints. It is not used in v1 — it will be integrated in a future release as an additional scan layer for repositories that expose LLM APIs.
-
-See [`agent/README.md`](agent/README.md) for standalone usage.

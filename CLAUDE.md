@@ -1,8 +1,8 @@
 # Trespass — Claude Agents & Skills
 
-**Trespass** is an adversarial prompt-injection testing service. The Python agent (`agent/`) uses Google ADK to generate multi-turn attack probes against an LLM target endpoint, then returns a structured result to the caller (Hono backend).
+**Trespass** is a GitHub repository security scanner. It connects to your GitHub account, downloads repository content via the GitHub API, and runs four analysis layers: secrets detection, dependency CVE auditing (OSV.dev), SAST pattern scanning, and optional LLM-powered code review.
 
-Stack: **Python 3.12 · FastAPI · Google ADK · Pydantic v2 · httpx · uv · Ruff · mypy · pytest**
+Stack: **Nuxt 4 · Vue 3 · Hono · Node.js · PostgreSQL · Drizzle ORM · Better-Auth · pnpm workspaces · Turborepo**
 
 ## Agent workflow
 
@@ -31,7 +31,7 @@ Skills are invoked with `/skill-name` in the Claude Code prompt. Some skills acc
 | Agent              | Invoke as       | Role                                                   |
 | ------------------ | --------------- | ------------------------------------------------------ |
 | `tech-lead`        | subagent / name | Orchestrates complex tasks, delegates, validates gates |
-| `backend-engineer` | subagent / name | Implements Python/FastAPI code, ADK agent logic        |
+| `backend-engineer` | subagent / name | Implements Hono routes, scanner services, DB schema    |
 
 ## Skills
 
