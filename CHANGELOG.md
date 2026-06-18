@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-06-18
+
+### Added
+- Terminal-style progress panel on the scan results page — shows each scan phase in real time (dependency audit, file tree fetch, code pattern scan, optional LLM review) with step counts, ✓/△/✗ icons, and a final severity summary line. Progress is persisted in a new `progress` column on the `scan` table (JSONB) so refreshing the page mid-scan retains state.
+
 ## [1.4.0] - 2026-06-18
 
 ### Added

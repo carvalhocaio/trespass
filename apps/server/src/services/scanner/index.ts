@@ -94,8 +94,58 @@ interface FindingRow {
 
 type Db = ReturnType<typeof createDb>;
 
+type ProgressStatus = "done" | "error" | "running" | "warn";
+
+interface ProgressStep {
+  detail: null | string;
+  key: string;
+  label: string;
+  status: ProgressStatus;
+}
+
+async function pushProgress(
+  db: Db,
+  scanId: string,
+  current: ProgressStep[],
+  step: ProgressStep
+): Promise<ProgressStep[]> {
+  const next = [...current, step];
+  await db.update(scan).set({ progress: next }).where(eq(scan.id, scanId));
+  return next;
+}
+
+async function updateLastProgress(
+  db: Db,
+  scanId: string,
+  current: ProgressStep[],
+  patch: Partial<ProgressStep>
+): Promise<ProgressStep[]> {
+  const next = current.map((s, i) =>
+    i === current.length - 1 ? { ...s, ...patch } : s
+  );
+  await db.update(scan).set({ progress: next }).where(eq(scan.id, scanId));
+  return next;
+}
+
 async function insertFinding(db: Db, row: FindingRow): Promise<void> {
   await db.insert(finding).values({ id: nanoid(), ...row });
+}
+
+function countManifestPackages(manifests: { content: string }[]): number {
+  return manifests.reduce((acc, m) => {
+    try {
+      const parsed = JSON.parse(m.content) as Record<string, unknown>;
+      const deps = {
+        ...(parsed.dependencies as object | undefined),
+        ...(parsed.devDependencies as object | undefined),
+        // biome-ignore lint/complexity/useLiteralKeys: key contains underscore, bracket access required
+        ...(parsed["install_requires"] as object | undefined),
+      };
+      return acc + Object.keys(deps).length;
+    } catch {
+      return acc;
+    }
+  }, 0);
 }
 
 interface ScanInput {
@@ -195,84 +245,155 @@ async function runLlmPhase(
   }
 }
 
+async function phaseDepAudit(
+  db: Db,
+  octokit: ReturnType<typeof createOctokit>,
+  input: ScanInput,
+  steps: ProgressStep[]
+): Promise<ProgressStep[]> {
+  let s = await pushProgress(db, input.scanId, steps, {
+    key: "audit_deps",
+    label: "Auditing dependencies...",
+    status: "running",
+    detail: null,
+  });
+  const manifests = await getPackageManifests(
+    octokit,
+    input.owner,
+    input.repoName
+  );
+  const totalPackages = countManifestPackages(manifests);
+  const depsVulns = await auditDependencies(manifests);
+  s = await updateLastProgress(db, input.scanId, s, {
+    status: depsVulns.length > 0 ? "warn" : "done",
+    detail:
+      totalPackages > 0
+        ? `${totalPackages} packages · ${depsVulns.length} vulnerable`
+        : `${depsVulns.length} vulnerabilities`,
+  });
+  for (const vuln of depsVulns) {
+    await insertFinding(db, {
+      scanId: input.scanId,
+      repoId: input.repoId,
+      userId: input.userId,
+      category: "dependency",
+      severity: vuln.severity,
+      title: vuln.title,
+      description: [
+        vuln.description,
+        vuln.cveId ? `CVE: ${vuln.cveId}` : null,
+        `Package: ${vuln.packageName}@${vuln.installedVersion}`,
+        vuln.fixedIn ? `Fixed in: ${vuln.fixedIn}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      file: vuln.ecosystem === "npm" ? "package.json" : "requirements.txt",
+      line: null,
+      snippet: null,
+      remediation: vuln.remediation,
+      llmEnriched: false,
+    });
+  }
+  return s;
+}
+
+async function phaseCodeScan(
+  db: Db,
+  octokit: ReturnType<typeof createOctokit>,
+  input: ScanInput,
+  steps: ProgressStep[]
+): Promise<{
+  filesScanned: number;
+  llmQueue: { path: string; content: string }[];
+  steps: ProgressStep[];
+}> {
+  let s = await pushProgress(db, input.scanId, steps, {
+    key: "fetch_tree",
+    label: "Fetching file tree...",
+    status: "running",
+    detail: null,
+  });
+  const tree = await getFileTree(
+    octokit,
+    input.owner,
+    input.repoName,
+    input.defaultBranch
+  );
+  const scannableFiles = tree.filter(
+    (e) => e.type === "blob" && shouldScan(e.path)
+  );
+  s = await updateLastProgress(db, input.scanId, s, {
+    status: "done",
+    detail: `${tree.length} files · ${scannableFiles.length} scannable`,
+  });
+
+  s = await pushProgress(db, input.scanId, s, {
+    key: "scan_code",
+    label: "Scanning code patterns...",
+    status: "running",
+    detail: null,
+  });
+  let filesScanned = 0;
+  let filesWithFindings = 0;
+  const llmQueue: { path: string; content: string }[] = [];
+  for (const file of scannableFiles) {
+    const result = await scanCodeFile(db, octokit, file.path, input);
+    if (!result) {
+      continue;
+    }
+    filesScanned++;
+    if (result.hasFindings) {
+      filesWithFindings++;
+    }
+    if (
+      input.llmConfig &&
+      (result.hasFindings || isLlmPriorityFile(file.path))
+    ) {
+      llmQueue.push({ path: file.path, content: result.content });
+    }
+  }
+  s = await updateLastProgress(db, input.scanId, s, {
+    status: filesWithFindings > 0 ? "warn" : "done",
+    detail: `${filesScanned} files · ${filesWithFindings} flagged`,
+  });
+  return { steps: s, filesScanned, llmQueue };
+}
+
 export async function runScan(input: ScanInput): Promise<void> {
   const db = createDb();
 
   await db
     .update(scan)
-    .set({ status: "running", startedAt: new Date() })
+    .set({ status: "running", startedAt: new Date(), progress: [] })
     .where(eq(scan.id, input.scanId));
 
   try {
     const octokit = createOctokit(input.pat);
 
-    // Phase 1: dependency audit
-    const manifests = await getPackageManifests(
-      octokit,
-      input.owner,
-      input.repoName
-    );
-    const depsVulns = await auditDependencies(manifests);
-    for (const vuln of depsVulns) {
-      await insertFinding(db, {
-        scanId: input.scanId,
-        repoId: input.repoId,
-        userId: input.userId,
-        category: "dependency",
-        severity: vuln.severity,
-        title: vuln.title,
-        description: [
-          vuln.description,
-          vuln.cveId ? `CVE: ${vuln.cveId}` : null,
-          `Package: ${vuln.packageName}@${vuln.installedVersion}`,
-          vuln.fixedIn ? `Fixed in: ${vuln.fixedIn}` : null,
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        file: vuln.ecosystem === "npm" ? "package.json" : "requirements.txt",
-        line: null,
-        snippet: null,
-        remediation: vuln.remediation,
-        llmEnriched: false,
+    let steps = await phaseDepAudit(db, octokit, input, []);
+    const {
+      steps: steps2,
+      filesScanned,
+      llmQueue,
+    } = await phaseCodeScan(db, octokit, input, steps);
+    steps = steps2;
+
+    let llmEnriched = false;
+    if (input.llmConfig && llmQueue.length > 0) {
+      steps = await pushProgress(db, input.scanId, steps, {
+        key: "llm_review",
+        label: "LLM code review...",
+        status: "running",
+        detail: null,
+      });
+      await runLlmPhase(db, llmQueue, input.llmConfig, input);
+      llmEnriched = true;
+      await updateLastProgress(db, input.scanId, steps, {
+        status: "done",
+        detail: `${Math.min(llmQueue.length, 30)} files reviewed`,
       });
     }
 
-    // Phase 2: per-file code scan
-    const tree = await getFileTree(
-      octokit,
-      input.owner,
-      input.repoName,
-      input.defaultBranch
-    );
-    const scannableFiles = tree.filter(
-      (e) => e.type === "blob" && shouldScan(e.path)
-    );
-
-    let filesScanned = 0;
-    const llmQueue: { path: string; content: string }[] = [];
-
-    for (const file of scannableFiles) {
-      const result = await scanCodeFile(db, octokit, file.path, input);
-      if (!result) {
-        continue;
-      }
-      filesScanned++;
-      if (
-        input.llmConfig &&
-        (result.hasFindings || isLlmPriorityFile(file.path))
-      ) {
-        llmQueue.push({ path: file.path, content: result.content });
-      }
-    }
-
-    // Phase 3: LLM enrichment (optional)
-    let llmEnriched = false;
-    if (input.llmConfig && llmQueue.length > 0) {
-      await runLlmPhase(db, llmQueue, input.llmConfig, input);
-      llmEnriched = true;
-    }
-
-    // Finalize
     const allFindings = await db
       .select({ severity: finding.severity })
       .from(finding)

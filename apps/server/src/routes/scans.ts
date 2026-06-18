@@ -55,6 +55,7 @@ export const scansRoute = new Hono<AppEnv>()
         id: scan.id,
         repoId: scan.repoId,
         status: scan.status,
+        progress: scan.progress,
         summary: scan.summary,
         error: scan.error,
         startedAt: scan.startedAt,

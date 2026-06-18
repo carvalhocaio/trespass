@@ -51,10 +51,18 @@ interface ScanSummary {
   total: number;
 }
 
+interface ProgressStep {
+  detail: null | string;
+  key: string;
+  label: string;
+  status: "done" | "error" | "running" | "warn";
+}
+
 interface Scan {
   error: string | null;
   finishedAt: string | null;
   id: string;
+  progress: ProgressStep[] | null;
   repo: { fullName: string; htmlUrl: string | null };
   repoId: string;
   startedAt: string | null;
@@ -300,19 +308,114 @@ function elapsed(start: string | null, end: string | null): string {
           </div>
         </div>
 
-        <!-- Status / summary bar -->
+        <!-- Terminal progress -->
         <div
-          v-if="scan.status === 'queued' || scan.status === 'running'"
-          class="flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5"
+          v-if="scan.status === 'queued' || scan.status === 'running' || (scan.status === 'done' && scan.progress?.length)"
+          class="rounded-xl border border-border/60 bg-[#0d0d0d] overflow-hidden font-mono text-sm"
         >
-          <Loader2 class="h-5 w-5 text-primary animate-spin" />
-          <div>
-            <p class="text-sm font-medium text-foreground">
-              {{ scan.status === "queued" ? "Scan queued..." : "Scanning repository..." }}
-            </p>
-            <p class="text-xs text-muted-foreground mt-0.5">
-              This page updates automatically.
-            </p>
+          <!-- Title bar -->
+          <div
+            class="flex items-center gap-2 px-4 py-2.5 border-b border-border/40 bg-[#161616]"
+          >
+            <span class="h-3 w-3 rounded-full bg-red-500/80" />
+            <span class="h-3 w-3 rounded-full bg-yellow-500/80" />
+            <span class="h-3 w-3 rounded-full bg-green-500/80" />
+            <span class="ml-3 text-xs text-muted-foreground">
+              trespass scan {{ scan.repo.fullName }}
+            </span>
+          </div>
+
+          <!-- Output lines -->
+          <div class="px-5 py-4 space-y-1.5">
+            <p class="text-muted-foreground text-xs mb-3">$ trespass scan .</p>
+
+            <!-- Queued placeholder -->
+            <div
+              v-if="scan.status === 'queued'"
+              class="flex items-center gap-2 text-xs text-muted-foreground"
+            >
+              <Loader2 class="h-3.5 w-3.5 animate-spin shrink-0" />
+              <span>Waiting to start...</span>
+            </div>
+
+            <!-- Progress steps -->
+            <div
+              v-for="step in (scan.progress ?? [])"
+              :key="step.key"
+              class="flex items-start gap-2 text-xs leading-relaxed"
+            >
+              <span class="shrink-0 w-3.5 text-center mt-px">
+                <Loader2
+                  v-if="step.status === 'running'"
+                  class="h-3 w-3 animate-spin text-primary inline"
+                />
+                <CheckCircle2
+                  v-else-if="step.status === 'done'"
+                  class="h-3 w-3 text-green-400 inline"
+                />
+                <AlertTriangle
+                  v-else-if="step.status === 'warn'"
+                  class="h-3 w-3 text-yellow-400 inline"
+                />
+                <span v-else class="text-red-400">✗</span>
+              </span>
+              <span
+                :class="step.status === 'running' ? 'text-foreground' : 'text-muted-foreground'"
+              >
+                {{ step.label }}
+                <span v-if="step.detail" class="text-foreground/70">
+                  {{ step.detail }}</span
+                >
+                <span
+                  v-if="step.status === 'running'"
+                  class="inline-block w-1.5 h-3 bg-primary/70 ml-0.5 animate-pulse align-middle"
+                />
+              </span>
+            </div>
+
+            <!-- Summary line when done -->
+            <template v-if="scan.status === 'done' && scan.summary">
+              <div
+                class="mt-3 pt-3 border-t border-border/30 text-xs font-bold tracking-wide"
+              >
+                <span v-if="scan.summary.critical > 0" class="text-red-400"
+                  >✗
+                </span>
+                <span v-else class="text-green-400">✓ </span>
+                <span v-if="scan.summary.critical > 0" class="text-red-400"
+                  >{{ scan.summary.critical }}
+                  CRITICAL</span
+                >
+                <span
+                  v-if="scan.summary.critical > 0 && scan.summary.high > 0"
+                  class="text-muted-foreground"
+                >
+                  ·
+                </span>
+                <span v-if="scan.summary.high > 0" class="text-orange-400"
+                  >{{ scan.summary.high }}
+                  HIGH</span
+                >
+                <span
+                  v-if="(scan.summary.critical > 0 || scan.summary.high > 0) && scan.summary.medium > 0"
+                  class="text-muted-foreground"
+                >
+                  ·
+                </span>
+                <span v-if="scan.summary.medium > 0" class="text-yellow-400"
+                  >{{ scan.summary.medium }}
+                  MEDIUM</span
+                >
+                <span
+                  v-if="scan.summary.critical === 0 && scan.summary.high === 0 && scan.summary.medium === 0"
+                  class="text-green-400"
+                  >All clear</span
+                >
+              </div>
+              <p class="text-xs text-muted-foreground mt-1">
+                Run complete in {{ elapsed(scan.startedAt, scan.finishedAt) }}
+              </p>
+            </template>
           </div>
         </div>
 

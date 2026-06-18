@@ -111,6 +111,15 @@ export const scan = pgTable(
       .notNull()
       .references(() => repository.id, { onDelete: "cascade" }),
     status: scanStatusEnum("status").default("queued").notNull(),
+    progress:
+      jsonb("progress").$type<
+        {
+          detail: null | string;
+          key: string;
+          label: string;
+          status: "done" | "error" | "running" | "warn";
+        }[]
+      >(),
     // Counts by severity — populated when status = done
     summary: jsonb("summary").$type<{
       critical: number;
