@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
+import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 import * as z from "zod";
 
 const { $authClient } = useNuxtApp();
@@ -47,9 +47,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           navigateTo("/dashboard", { replace: true });
         },
         onError: (error) => {
-          toast.add({ title: "Sign in failed", description: error.error.message });
+          toast.add({
+            title: "Sign in failed",
+            description: error.error.message,
+          });
         },
-      },
+      }
     );
   } catch (error: any) {
     toast.add({
@@ -75,7 +78,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       >
         <template #description>
           Need an account?
-          <ULink class="text-primary font-medium" @click="$emit('switchToSignUp')"> Sign Up </ULink>
+          <ULink
+            class="text-primary font-medium"
+            @click="$emit('switchToSignUp')"
+          >
+            Sign Up
+          </ULink>
         </template>
       </UAuthForm>
     </UPageCard>
