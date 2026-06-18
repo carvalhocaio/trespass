@@ -121,4 +121,12 @@
       "calt" 1;
     @apply bg-background text-foreground font-sans antialiased;
   }
+
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    cursor: pointer;
+  }
 }

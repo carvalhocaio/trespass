@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { GitBranch, Lock, Play, RefreshCw, Shield } from "lucide-vue-next";
+import {
+  GitBranch,
+  Lock,
+  Play,
+  RefreshCw,
+  Search,
+  Shield,
+} from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
 useHead({ title: "Repositories — Trespass" });
@@ -19,17 +26,26 @@ interface Repo {
 }
 
 const repos = ref<Repo[]>([]);
+const search = ref("");
 const loading = ref(true);
 const syncing = ref(false);
 const scanningId = ref<string | null>(null);
 
+const filteredRepos = computed(() => {
+  const q = search.value.toLowerCase();
+  if (!q) {
+    return repos.value;
+  }
+  return repos.value.filter((r) => r.fullName.toLowerCase().includes(q));
+});
+
 async function fetchRepos() {
   loading.value = true;
   try {
-    const res = await $fetch<{ repos: Repo[] }>(`${BASE}/api/repos`, {
+    const res = await $fetch<Repo[]>(`${BASE}/api/repos`, {
       credentials: "include",
     });
-    repos.value = res.repos ?? [];
+    repos.value = res ?? [];
 
     if (route.query.scan) {
       const target = repos.value.find((r) => r.id === route.query.scan);
@@ -81,7 +97,7 @@ onMounted(fetchRepos);
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-4xl">
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold font-mono text-foreground">
           Repositories
@@ -100,6 +116,17 @@ onMounted(fetchRepos);
         <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': syncing }" />
         Sync
       </Button>
+    </div>
+
+    <div v-if="!loading && repos.length > 0" class="relative mb-4">
+      <Search
+        class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
+      />
+      <Input
+        v-model="search"
+        placeholder="Filter repositories..."
+        class="pl-9 font-mono text-sm bg-background border-border/50"
+      />
     </div>
 
     <div v-if="loading" class="grid gap-3">
@@ -126,8 +153,15 @@ onMounted(fetchRepos);
       </Button>
     </div>
 
+    <div
+      v-else-if="filteredRepos.length === 0"
+      class="text-center py-12 text-sm text-muted-foreground font-mono"
+    >
+      No repositories match "{{ search }}"
+    </div>
+
     <div v-else class="space-y-2">
-      <SpotlightCard v-for="repo in repos" :key="repo.id">
+      <SpotlightCard v-for="repo in filteredRepos" :key="repo.id">
         <div class="p-4 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
             <GitBranch class="h-4 w-4 text-muted-foreground shrink-0" />

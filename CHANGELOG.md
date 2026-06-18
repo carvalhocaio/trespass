@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-18
+
+### Added
+- Repository search input on the Repos page — filters by name client-side with case-insensitive matching; shows a "no match" state when the query returns nothing.
+- Global `cursor: pointer` for all button elements via a base CSS rule — no per-component class needed.
+
+### Fixed
+- Repos page was reading `res.repos` from the API response when the server returns a plain array, so the list was always empty after sync.
+- GitHub OAuth redirect landed on `localhost:3000/dashboard` (Hono) instead of the frontend; `callbackURL` now uses the page's own origin so the redirect always goes to the correct port.
+
+### Improved
+- Login page redesigned as a borderless, minimal layout — GitHub OAuth only, no email/password form.
+
 ## [1.0.0] - 2026-06-18
 
 ### Added
