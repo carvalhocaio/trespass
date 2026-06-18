@@ -8,7 +8,6 @@
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
-    "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
