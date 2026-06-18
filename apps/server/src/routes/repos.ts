@@ -1,9 +1,9 @@
 import { createCrypto } from "@trespass/crypto";
 import { createDb } from "@trespass/db";
-import { repository, userSecret } from "@trespass/db/schema/app";
+import { repository, scan, userSecret } from "@trespass/db/schema/app";
 import { env } from "@trespass/env/server";
 import { createOctokit, listUserRepos } from "@trespass/github";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { nanoid } from "nanoid";
@@ -13,7 +13,7 @@ import type { AppEnv } from "../types";
 const crypto = createCrypto(env.SECRET_ENCRYPTION_KEY);
 
 export const reposRoute = new Hono<AppEnv>()
-  // GET /api/repos — list repos synced to DB for this user
+  // GET /api/repos — list repos synced to DB, each with its latest scan
   .get("/", async (c) => {
     const user = c.get("user");
     const db = createDb();
@@ -24,7 +24,41 @@ export const reposRoute = new Hono<AppEnv>()
       .where(eq(repository.userId, user.id))
       .orderBy(repository.updatedAt);
 
-    return c.json(repos);
+    if (repos.length === 0) {
+      return c.json([]);
+    }
+
+    // Fetch latest scan per repo in one query
+    const repoIds = repos.map((r) => r.id);
+    const allScans = await db
+      .select()
+      .from(scan)
+      .where(eq(scan.userId, user.id))
+      .orderBy(desc(scan.startedAt));
+
+    const latestScanByRepo = new Map<string, (typeof allScans)[number]>();
+    for (const s of allScans) {
+      if (repoIds.includes(s.repoId) && !latestScanByRepo.has(s.repoId)) {
+        latestScanByRepo.set(s.repoId, s);
+      }
+    }
+
+    const result = repos.map((r) => {
+      const lastScan = latestScanByRepo.get(r.id);
+      return {
+        ...r,
+        lastScan: lastScan
+          ? {
+              id: lastScan.id,
+              status: lastScan.status,
+              summary: lastScan.summary,
+              finishedAt: lastScan.finishedAt,
+            }
+          : null,
+      };
+    });
+
+    return c.json(result);
   })
   // POST /api/repos/sync — fetch repos from GitHub and upsert to DB
   .post("/sync", async (c) => {

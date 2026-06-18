@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-18
+
+### Added
+- Dashboard now shows the latest scan summary per repository (critical / high / medium counts, or "Clean") fetched in a single additional query on `GET /api/repos`.
+- Repository search input on the Dashboard — same case-insensitive client-side filter as the Repos page.
+- Scan can be triggered directly from the Dashboard per repository row.
+
+### Removed
+- `/repos` page removed — all repository management (sync, search, scan) is now consolidated in `/dashboard`. The Repos nav link is gone.
+
 ## [1.1.0] - 2026-06-18
 
 ### Added

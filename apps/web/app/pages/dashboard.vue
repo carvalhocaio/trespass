@@ -2,8 +2,10 @@
 import {
   AlertTriangle,
   GitBranch,
-  Plus,
+  Play,
   RefreshCw,
+  Search,
+  Settings2,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -43,15 +45,25 @@ interface Repo {
 }
 
 const repos = ref<Repo[]>([]);
+const search = ref("");
 const loadingRepos = ref(true);
 const syncing = ref(false);
+const scanningId = ref<string | null>(null);
+
+const filteredRepos = computed(() => {
+  const q = search.value.toLowerCase();
+  if (!q) {
+    return repos.value;
+  }
+  return repos.value.filter((r) => r.fullName.toLowerCase().includes(q));
+});
 
 async function fetchRepos() {
   try {
-    const res = await $fetch<{ repos: Repo[] }>(`${BASE}/api/repos`, {
+    const res = await $fetch<Repo[]>(`${BASE}/api/repos`, {
       credentials: "include",
     });
-    repos.value = res.repos ?? [];
+    repos.value = res ?? [];
   } catch {
     toast.error("Failed to load repositories");
   } finally {
@@ -77,6 +89,22 @@ async function syncRepos() {
   }
 }
 
+async function startScan(repo: Repo) {
+  scanningId.value = repo.id;
+  try {
+    const res = await $fetch<{ scan: { id: string } }>(`${BASE}/api/scans`, {
+      method: "POST",
+      body: { repoId: repo.id },
+      credentials: "include",
+    });
+    toast.success(`Scan started for ${repo.name}`);
+    navigateTo(`/scans/${res.scan.id}`);
+  } catch {
+    toast.error("Failed to start scan");
+    scanningId.value = null;
+  }
+}
+
 onMounted(fetchRepos);
 
 function severityColor(s: string) {
@@ -94,7 +122,7 @@ function severityColor(s: string) {
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold font-mono text-foreground">Dashboard</h1>
         <p class="text-sm text-muted-foreground mt-0.5">
@@ -119,11 +147,22 @@ function severityColor(s: string) {
           class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs gap-2"
         >
           <NuxtLink to="/settings">
-            <Plus class="h-3.5 w-3.5" />
+            <Settings2 class="h-3.5 w-3.5" />
             Configure
           </NuxtLink>
         </Button>
       </div>
+    </div>
+
+    <div v-if="!loadingRepos && repos.length > 0" class="relative mb-4">
+      <Search
+        class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
+      />
+      <Input
+        v-model="search"
+        placeholder="Filter repositories..."
+        class="pl-9 font-mono text-sm bg-background border-border/50"
+      />
     </div>
 
     <!-- Loading skeleton -->
@@ -169,10 +208,18 @@ function severityColor(s: string) {
       </div>
     </div>
 
+    <!-- No search match -->
+    <div
+      v-else-if="filteredRepos.length === 0"
+      class="text-center py-12 text-sm text-muted-foreground font-mono"
+    >
+      No repositories match "{{ search }}"
+    </div>
+
     <!-- Repo list -->
     <div v-else class="space-y-3">
       <SpotlightCard
-        v-for="repo in repos"
+        v-for="repo in filteredRepos"
         :key="repo.id"
         class="cursor-pointer"
       >
@@ -258,12 +305,13 @@ function severityColor(s: string) {
             </template>
             <template v-else>
               <Button
-                variant="outline"
                 size="sm"
-                as-child
-                class="border-primary/30 text-primary hover:bg-primary/10 font-mono text-xs"
+                class="shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5"
+                :disabled="scanningId === repo.id"
+                @click="startScan(repo)"
               >
-                <NuxtLink :to="`/repos?scan=${repo.id}`">Scan</NuxtLink>
+                <Play class="h-3.5 w-3.5" />
+                {{ scanningId === repo.id ? "Starting..." : "Scan" }}
               </Button>
             </template>
           </div>
