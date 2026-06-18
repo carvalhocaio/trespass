@@ -24,7 +24,7 @@ Start complex tasks with `tech-lead` — it will orchestrate the right agents in
 
 Skills are invoked with `/skill-name` in the Claude Code prompt. Some skills accept an optional argument: `/commit`, `/review path/to/file`, `/changelog v1.3.0`.
 
-**Convention skills** (`python-conventions`, `api-conventions`) are **path-based** — they activate automatically when Claude reads or writes files matching their `paths` patterns. They are never invoked manually.
+**Convention skills** (`typescript-conventions`, `api-conventions`) are **path-based** — they activate automatically when Claude reads or writes files matching their `paths` patterns. They are never invoked manually.
 
 ## Agents
 
@@ -48,10 +48,10 @@ Skills are invoked with `/skill-name` in the Claude Code prompt. Some skills acc
 
 ## Convention skills (auto-loaded)
 
-| Skill                | Activates on                                   |
-| -------------------- | ---------------------------------------------- |
-| `python-conventions` | `**/*.py`                                      |
-| `api-conventions`    | `**/routes/**`, `**/api/**`, `**/handlers/**`… |
+| Skill                    | Activates on                                   |
+| ------------------------ | ---------------------------------------------- |
+| `typescript-conventions` | `**/*.ts`, `**/*.vue`                          |
+| `api-conventions`        | `**/routes/**`, `**/api/**`, `**/handlers/**`… |
 
 ## Recommended flow for a new task
 
@@ -78,11 +78,12 @@ When the user asks to version with the **full flow** (`versionar com o fluxo com
 /docs                ← update README.md and any affected .md docs
                         (bump Features, Configuration, or Usage sections as needed)
 /commit              ← stage all changed files, suggest Conventional Commits message, ask for confirmation
-git push && git tag v<version> && git push --tags  ← push commit then create and push the version tag
+git push && git tag -a v<version> -m "v<version>" && git push --tags  ← push commit then create annotated tag and push
 ```
 
 Rules:
 - All six steps are mandatory when "fluxo completo" is requested
+- `/version` includes an audit of `.claude/skills/` and `.claude/agents/` for stale references — fix inline if small, flag otherwise
 - `/security-review` is optional here unless the diff touches auth, I/O, or secrets
 - Never push or tag without a preceding `/commit` confirmation in the same flow
 - If `/review` finds critical findings, fix them before proceeding to version bump

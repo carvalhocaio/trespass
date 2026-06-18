@@ -49,7 +49,19 @@ Edit `package.json` replacing `"version": "<old>"` with `"version": "<new>"`.
 grep -m1 '"version"' package.json
 ```
 
-### 6. Report to the user
+### 6. Audit skills and agents
+
+Before reporting, check if any skill or agent file is outdated for the current stack:
+
+```bash
+ls .claude/skills/
+ls .claude/agents/
+grep -l "Python\|FastAPI\|ADK\|pyproject\|ruff\|mypy" .claude/skills/**/*.md .claude/agents/*.md .claude/CLAUDE.md 2>/dev/null
+```
+
+Report any stale files found (e.g. references to removed stack layers, deleted modules, or renamed skills). Fix them inline if the change is small; otherwise flag for the user.
+
+### 7. Report to the user
 
 Display clearly:
 
@@ -63,7 +75,7 @@ Then instruct the user (do NOT do these yourself):
 > 1. `/changelog` — document changes
 > 2. `/docs` — update README if needed
 > 3. `/commit` — stage and commit
-> 4. `git push && git tag v<new> && git push --tags`
+> 4. `git push && git tag -a v<new> -m "v<new>" && git push --tags`
 
 ## Rules
 

@@ -14,7 +14,7 @@ You do not implement, you do not review, you do not write docs — you plan, del
 
 | Agent              | When to invoke                                                              |
 | ------------------ | --------------------------------------------------------------------------- |
-| `backend-engineer` | Backend implementation: new features, refactors, bug fixes, APIs, ADK logic |
+| `backend-engineer` | Backend implementation: new features, refactors, bug fixes, Hono routes, scanner services |
 | `test`             | After implementation — generates or updates tests before review             |
 | `review`           | After every significant change — always before PR or merge                  |
 | `security-review`  | Always — this service has LLM + external I/O surface area                  |
@@ -23,7 +23,7 @@ You do not implement, you do not review, you do not write docs — you plan, del
 | `changelog`        | When preparing a release or version bump                                    |
 | `commit`           | After implementation is complete and reviewed — to finalize the commit      |
 
-> **Convention skills are auto-loaded** — `python-conventions` and `api-conventions` activate automatically based on file paths. You never need to call them explicitly; they are always in effect when the relevant files are being edited.
+> **Convention skills are auto-loaded** — `typescript-conventions` and `api-conventions` activate automatically based on file paths. You never need to call them explicitly; they are always in effect when the relevant files are being edited.
 
 ## Workflow for a new task
 
@@ -34,7 +34,7 @@ You do not implement, you do not review, you do not write docs — you plan, del
    - Inspect the codebase to understand which files and modules are affected:
      ```bash
      git diff --name-only HEAD   # if work is already in progress
-     grep -r "<keyword>" --include="*.py" --include="*.ts" --include="*.go" -l
+     grep -r "<keyword>" --include="*.ts" --include="*.vue" -l
      find . -maxdepth 4 -not -path "./.git/*" -type f | sort
      ```
    - Identify the nature of the task: feature, bugfix, refactor, documentation, release
@@ -49,7 +49,7 @@ You do not implement, you do not review, you do not write docs — you plan, del
    | New feature        | `backend-engineer` → `test` → `review` → `security-review` → `commit`            |
    | Bugfix             | `backend-engineer` → `test` → `review` → `commit`                                |
    | Refactor           | `backend-engineer` → `test` → `review` → `commit`                                |
-   | ADK / attack logic | `backend-engineer` → `test` → `review` → `security-review` → `commit`            |
+   | Security scan feat | `backend-engineer` → `test` → `review` → `security-review` → `commit`            |
    | Documentation only | `docs` → `commit`                                                                 |
    | Release prep       | `changelog` → `docs` (if needed) → `commit`                                      |
    | PR opening         | `review` (if not done) → `pr-description`                                        |
@@ -75,8 +75,8 @@ You do not implement, you do not review, you do not write docs — you plan, del
 
    After all delegated agents have completed their work, verify:
 
-   - [ ] Linter passes — run the project's lint command (`make lint`, `ruff check .`, `go vet ./...`, `eslint`)
-   - [ ] No type errors — run typecheck if applicable (`pyright`, `tsc --noEmit`)
+   - [ ] Linter passes — `pnpm check` (Biome via ultracite)
+   - [ ] No type errors — `pnpm check-types` (tsc)
    - [ ] Tests pass — run the project's test command if tests exist
    - [ ] `review` has been called and no `critical` findings remain open
    - [ ] New behavior has documentation if it's user-facing or API-facing

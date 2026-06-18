@@ -1,78 +1,73 @@
-# Trespass — Python Project Standards
+# Trespass — TypeScript Monorepo Standards
 
-This project is an adversarial prompt-injection testing agent. The Python service exposes a FastAPI endpoint that receives a `PromptInjectionRequest`, runs a multi-turn attack campaign via Google ADK against the target LLM, and returns a `PromptInjectionResult`.
+This project is a GitHub repository security scanner. The Hono API receives scan requests, runs multi-layer static analysis (secrets, deps, SAST, optional LLM review) against a GitHub repository via the GitHub API, and persists findings to PostgreSQL.
 
 Apply these standards whenever you write or review code in this project.
 
 ## Tooling
 
-- Package manager: `uv` — never use `pip install` directly
-- Formatter: `ruff format`
-- Linter: `ruff check --fix`
-- Type checker: `mypy --strict`
-- Tests: `pytest` with `pytest-asyncio` (`asyncio_mode = "auto"`)
-- Line length: **100 characters** (configured in `pyproject.toml`)
+- Package manager: `pnpm` — never use `npm install` directly
+- Linter + formatter: `ultracite` (Biome ruleset) — `pnpm check` / `pnpm fix`
+- Type checker: `tsc` — `pnpm check-types`
+- Line length: **80 characters** (configured in `biome.json`)
 
 Run before considering any file done:
 
 ```bash
-cd agent && uv run ruff check --fix src/ && uv run ruff format src/ && uv run mypy src/
+pnpm check && pnpm check-types
 ```
 
 ## Layer architecture
 
 ```
-api/          ← FastAPI routes — HTTP parsing and response only
-attacker/     ← ADK agent that generates attack probes
-orchestrator/ ← multi-turn loop logic (crescendo, budget control)
-detectors/    ← canary detection, stop-reason evaluation
-targets/      ← httpx client that calls the target endpoint
-models.py     ← public boundary: PromptInjectionRequest / PromptInjectionResult
-config.py     ← Settings via pydantic-settings, injected from env
+apps/server/src/
+├── routes/        ← Hono routes — HTTP parsing and response only
+├── services/
+│   └── scanner/   ← scan engine layers (secrets, deps, sast, llm)
+└── middleware/    ← auth, error mapping
+packages/
+├── db/            ← Drizzle schema, migrations, createDb()
+├── crypto/        ← AES-256-GCM encrypt/decrypt
+├── github/        ← Octokit wrapper (file tree, content, manifests)
+├── auth/          ← Better-Auth configuration
+└── env/           ← Zod-validated env vars
 ```
 
 Rules:
-- `api/` contains no business logic — delegates to `orchestrator/`
-- `orchestrator/` is HTTP-agnostic — no `Request`/`Response` imports from FastAPI
-- `targets/` isolates all external I/O — the orchestrator never uses httpx directly
+- `routes/` contains no business logic — delegates to `services/`
+- `services/` is HTTP-agnostic — no `Request`/`Response` imports from Hono
+- `packages/github/` isolates all GitHub API I/O — scanner never uses Octokit directly
+- `HTTPException` never leaves `routes/`
 
-## Pydantic models
+## Pydantic models → Zod / TypeScript types
 
-- All public API boundaries use `model_config = ConfigDict(extra="ignore")` to tolerate version skew between this service and Hono
-- `SecretStr` for all credentials — never plain `str`
-- `Field(...)` with `description=` on all public model fields
-- Enums as `str, Enum` subclasses — `str` serialization is deliberate
+- All public API boundaries validate input with `zod`
+- Prefer `interface` for public contracts, `type` for aliases and unions
+- `strict: true` always — never use `any`; use `unknown` and narrow explicitly
 
-## Google ADK
+## Database (Drizzle ORM)
 
-- Use `google-adk` (GA 2.x) for adversarial probe generation
-- The ADK agent lives in `attacker/agent.py` — keep it isolated from `api/`
-- Configuration (model name, API key) is always read from `Settings` — never hardcoded
-- `attacker_model` default is `gemini-flash-latest`; the key is `TRESPASS_GEMINI_API_KEY`
-
-## Attack loop limits
-
-- `max_turns` hard ceiling: 1–20 (enforced by `Settings.max_turns`); request overrides respected only downward
-- `target_timeout_seconds`: timeout for each individual call to the target
-- `run_budget_seconds`: total wall-clock ceiling for the whole loop — seatbelt beyond `max_turns`
+- Always call `createDb()` per-request — never a module-level singleton
+- Use `eq`, `and`, `desc` from `drizzle-orm` — never raw SQL strings
+- Schema lives in `packages/db/src/schema/app.ts` — push with `pnpm db:push`
+- Always `limit(1)` on single-row queries; destructure: `const [row] = await db...`
 
 ## Async
 
-- I/O-bound functions are `async def`
-- Never `time.sleep()` inside `async def` — use `asyncio.sleep()`
-- Use `asyncio.gather()` for independent concurrent coroutines
-- Never mix blocking I/O inside `async def` without `run_in_executor`
+- I/O-bound functions are `async` — DB, external HTTP, file reads
+- Always `async/await` — never callbacks or nested `.then()`
+- Use `Promise.all` for independent parallel operations
+- Never mix blocking synchronous code inside `async` without justification
 
 ## Error handling
 
-- Create domain exceptions per module (`class TargetTimeoutError(Exception)`)
-- Never `except Exception: pass` or `except Exception: raise`
+- Create domain error classes per module (`class TargetTimeoutError extends Error`)
+- Never `catch (e) {}` — at minimum re-throw or log
 - Map domain errors to HTTP status codes only in the route layer
-- `HTTPException` never leaves `api/`
+- `HTTPException` never leaves `routes/`
 
 ## Testing
 
-- Use `respx` to mock `httpx` calls — never make real network calls in unit tests
-- `asyncio_mode = "auto"` means no `@pytest.mark.asyncio` decorator needed
-- Call `get_settings.cache_clear()` in tests that override environment variables
-- `tests/` mirrors `src/trespass_agent/` — one test file per module
+- Use `vitest` for unit tests — follow existing test conventions
+- Mock external I/O (HTTP, DB) — never make real network calls in unit tests
+- Tests live in `tests/` mirroring `src/` structure
