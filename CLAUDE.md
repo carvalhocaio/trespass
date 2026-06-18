@@ -75,6 +75,8 @@ When the user asks to version with the **full flow** (`versionar com o fluxo com
 /changelog [vX.Y.Z]  ← generate or update CHANGELOG.md
 /docs                ← update README.md and any affected .md docs
                         (bump Features, Configuration, or Usage sections as needed)
+version bump         ← update "version" field in root package.json to match the CHANGELOG version
+                        (the footer badge reads from this file via nuxt.config.ts)
 /commit              ← stage all changed files, suggest Conventional Commits message, ask for confirmation
 git push             ← push to origin after commit confirmation
 ```
