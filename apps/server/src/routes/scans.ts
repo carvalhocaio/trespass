@@ -14,6 +14,7 @@ const crypto = createCrypto(env.SECRET_ENCRYPTION_KEY);
 
 const createScanSchema = z.object({
   repoId: z.string().min(1),
+  includeLlm: z.boolean().default(true),
 });
 
 export const scansRoute = new Hono<AppEnv>()
@@ -192,9 +193,12 @@ export const scansRoute = new Hono<AppEnv>()
 
     const pat = crypto.decrypt(secret.githubPatEnc);
 
-    // Build optional LLM config
+    // Build optional LLM config — only if user opted in for this scan
     const llmConfig =
-      secret.llmApiKeyEnc && secret.llmProvider && secret.llmModel
+      parsed.data.includeLlm &&
+      secret.llmApiKeyEnc &&
+      secret.llmProvider &&
+      secret.llmModel
         ? {
             provider: secret.llmProvider,
             apiKey: crypto.decrypt(secret.llmApiKeyEnc),

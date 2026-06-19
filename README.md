@@ -24,6 +24,7 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 - Native OS browser notifications when a scan finishes — shows repo name, critical/high finding counts, and final status; falls back to an in-app toast if permission is denied
 - Scan duration timer updates every second during active scans instead of jumping at each polling interval
 - Scans run to full completion regardless of how long LLM review takes — no forced timeout cap
+- LLM review is opt-in per scan — when an LLM is configured, a dialog asks "No, skip" or "Yes, include" before each scan; without LLM configured, scans start immediately
 - Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation
 - LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers
 - Semantic versioning badge in the UI footer

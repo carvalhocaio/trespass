@@ -50,6 +50,11 @@ const loadingRepos = ref(true);
 const syncing = ref(false);
 const scanningId = ref<string | null>(null);
 
+const hasLlm = ref(false);
+const llmModel = ref<string | null>(null);
+const pendingScanRepo = ref<Repo | null>(null);
+const scanDialogOpen = ref(false);
+
 const filteredRepos = computed(() => {
   const q = search.value.toLowerCase();
   if (!q) {
@@ -89,15 +94,24 @@ async function syncRepos() {
   }
 }
 
-async function startScan(repo: Repo) {
+function startScan(repo: Repo) {
+  if (!hasLlm.value) {
+    executeScan(repo, false);
+    return;
+  }
+  pendingScanRepo.value = repo;
+  scanDialogOpen.value = true;
+}
+
+async function executeScan(repo: Repo, withLlm: boolean) {
   scanningId.value = repo.id;
+  scanDialogOpen.value = false;
   try {
     const res = await $fetch<{ scan: { id: string } }>(`${BASE}/api/scans`, {
       method: "POST",
-      body: { repoId: repo.id },
+      body: { repoId: repo.id, includeLlm: withLlm },
       credentials: "include",
     });
-    toast.success(`Scan started for ${repo.name}`);
     navigateTo(`/scans/${res.scan.id}`);
   } catch {
     toast.error("Failed to start scan");
@@ -105,7 +119,23 @@ async function startScan(repo: Repo) {
   }
 }
 
-onMounted(fetchRepos);
+async function fetchSecretStatus() {
+  try {
+    const status = await $fetch<{
+      hasLlmKey: boolean;
+      llmModel: string | null;
+    }>(`${BASE}/api/me/secrets/status`, { credentials: "include" });
+    hasLlm.value = status.hasLlmKey;
+    llmModel.value = status.llmModel;
+  } catch {
+    // non-critical — scan still works without LLM flag
+  }
+}
+
+onMounted(() => {
+  fetchRepos();
+  fetchSecretStatus();
+});
 
 function severityColor(s: string) {
   return (
@@ -327,4 +357,40 @@ function severityColor(s: string) {
       </SpotlightCard>
     </div>
   </div>
+
+  <!-- LLM review opt-in dialog -->
+  <Dialog v-model:open="scanDialogOpen">
+    <DialogContent class="max-w-sm">
+      <DialogHeader>
+        <DialogTitle class="font-mono pr-6 truncate">
+          Scan — {{ pendingScanRepo?.name }}
+        </DialogTitle>
+        <DialogDescription>
+          Include LLM review
+          <span v-if="llmModel" class="font-mono text-foreground"
+            >({{ llmModel }})</span
+          >
+          in this scan?
+        </DialogDescription>
+      </DialogHeader>
+
+      <DialogFooter class="gap-2 sm:gap-2">
+        <Button
+          variant="outline"
+          class="font-mono text-xs"
+          :disabled="scanningId === pendingScanRepo?.id"
+          @click="pendingScanRepo && executeScan(pendingScanRepo, false)"
+        >
+          No, skip
+        </Button>
+        <Button
+          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs"
+          :disabled="scanningId === pendingScanRepo?.id"
+          @click="pendingScanRepo && executeScan(pendingScanRepo, true)"
+        >
+          Yes, include
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-19
+
+### Added
+- LLM review is now opt-in per scan — when an LLM is configured, clicking "Scan" or "Re-scan" opens a dialog asking "No, skip" or "Yes, include" before starting. Without LLM configured the scan starts immediately with no extra click.
+
+### Fixed
+- Dialog close button no longer overlaps the title text on long repository names — title now truncates with right padding.
+
 ## [1.9.0] - 2026-06-19
 
 ### Added

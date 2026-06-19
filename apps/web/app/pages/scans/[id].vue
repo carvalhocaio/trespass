@@ -133,6 +133,16 @@ onMounted(async () => {
     pollInterval = setInterval(fetchScan, 3000);
     await notif.requestPermission();
   }
+  try {
+    const status = await $fetch<{
+      hasLlmKey: boolean;
+      llmModel: string | null;
+    }>(`${BASE}/api/me/secrets/status`, { credentials: "include" });
+    hasLlm.value = status.hasLlmKey;
+    llmModel.value = status.llmModel;
+  } catch {
+    // non-critical
+  }
 });
 
 onUnmounted(() => {
@@ -146,6 +156,9 @@ onUnmounted(() => {
 
 const rescanning = ref(false);
 const stopping = ref(false);
+const hasLlm = ref(false);
+const llmModel = ref<string | null>(null);
+const rescanDialogOpen = ref(false);
 
 async function stopScan() {
   if (!scan.value) {
@@ -170,15 +183,27 @@ async function stopScan() {
   }
 }
 
-async function rescan() {
+function rescan() {
+  if (!scan.value) {
+    return;
+  }
+  if (!hasLlm.value) {
+    executeRescan(false);
+    return;
+  }
+  rescanDialogOpen.value = true;
+}
+
+async function executeRescan(withLlm: boolean) {
   if (!scan.value) {
     return;
   }
   rescanning.value = true;
+  rescanDialogOpen.value = false;
   try {
     const res = await $fetch<{ scan: { id: string } }>(`${BASE}/api/scans`, {
       method: "POST",
-      body: { repoId: scan.value.repoId },
+      body: { repoId: scan.value.repoId, includeLlm: withLlm },
       credentials: "include",
     });
     navigateTo(`/scans/${res.scan.id}`);
@@ -670,4 +695,40 @@ function elapsed(
       </div>
     </template>
   </div>
+
+  <!-- LLM review opt-in dialog for re-scan -->
+  <Dialog v-model:open="rescanDialogOpen">
+    <DialogContent class="max-w-sm">
+      <DialogHeader>
+        <DialogTitle class="font-mono pr-6 truncate">
+          Re-scan — {{ scan?.repo.fullName }}
+        </DialogTitle>
+        <DialogDescription>
+          Include LLM review
+          <span v-if="llmModel" class="font-mono text-foreground"
+            >({{ llmModel }})</span
+          >
+          in this scan?
+        </DialogDescription>
+      </DialogHeader>
+
+      <DialogFooter class="gap-2 sm:gap-2">
+        <Button
+          variant="outline"
+          class="font-mono text-xs"
+          :disabled="rescanning"
+          @click="executeRescan(false)"
+        >
+          No, skip
+        </Button>
+        <Button
+          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs"
+          :disabled="rescanning"
+          @click="executeRescan(true)"
+        >
+          Yes, include
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
