@@ -16,8 +16,10 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 - GitHub OAuth login (Better-Auth)
 - AES-256-GCM encrypted storage for GitHub PATs and LLM API keys
 - Fire-and-forget background scan — no blocking on the HTTP request
-- Per-scan finding history with status tracking (`queued → running → done | error`)
+- Per-scan finding history with status tracking (`queued → running → done | error | cancelled`)
 - Terminal-style progress panel during scans — real-time step tracking (dependency audit → file tree → code scan → LLM review) with counts and status icons
+- Dashboard shows a "View →" link during active scans — navigate to the live progress screen without waiting for the scan to finish
+- Stop Scan button on the results page — cancels any queued or running scan immediately; the scanner checks for cancellation between phases to stop promptly
 - Re-scan button on results page — starts a new scan for the same repo and navigates to the fresh result
 - Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation
 - LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers

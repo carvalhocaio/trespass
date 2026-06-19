@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-06-18
+
+### Added
+- Scans em andamento (`running`) no dashboard agora exibem um link "View →" que navega para a tela de detalhes em tempo real — antes só aparecia o texto "Scanning..." sem navegação possível.
+- Novo botão "Stop Scan" na tela de detalhes do scan — cancela imediatamente qualquer scan em fila ou em andamento, com feedback visual e mensagem no terminal do progresso.
+
+### Improved
+- Novo status `cancelled` no ciclo de vida do scan (além de `queued`, `running`, `done`, `error`) — o scanner verifica o cancelamento entre fases e não sobrescreve o status caso o scan já tenha terminado (proteção contra race condition).
+
 ## [1.6.0] - 2026-06-18
 
 ### Improved

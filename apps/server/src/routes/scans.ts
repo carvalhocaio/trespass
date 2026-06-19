@@ -2,7 +2,7 @@ import { createCrypto } from "@trespass/crypto";
 import { createDb } from "@trespass/db";
 import { finding, repository, scan, userSecret } from "@trespass/db/schema/app";
 import { env } from "@trespass/env/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { nanoid } from "nanoid";
@@ -81,6 +81,51 @@ export const scansRoute = new Hono<AppEnv>()
       .orderBy(finding.severity, finding.file);
 
     return c.json({ scan: row, findings });
+  })
+  // DELETE /api/scans/:id — cancel a queued or running scan
+  .delete("/:id", async (c) => {
+    const user = c.get("user");
+    const scanId = c.req.param("id");
+    const db = createDb();
+
+    const [row] = await db
+      .select({ id: scan.id, status: scan.status })
+      .from(scan)
+      .where(and(eq(scan.id, scanId), eq(scan.userId, user.id)))
+      .limit(1);
+
+    if (!row) {
+      throw new HTTPException(404, { message: "Scan not found" });
+    }
+
+    if (row.status !== "queued" && row.status !== "running") {
+      throw new HTTPException(409, {
+        message: "Scan is already finished and cannot be cancelled",
+      });
+    }
+
+    const [updated] = await db
+      .update(scan)
+      .set({
+        status: "cancelled",
+        error: "Scan stopped by user",
+        finishedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(scan.id, scanId),
+          or(eq(scan.status, "queued"), eq(scan.status, "running"))
+        )
+      )
+      .returning();
+
+    if (!updated) {
+      throw new HTTPException(409, {
+        message: "Scan is already finished and cannot be cancelled",
+      });
+    }
+
+    return c.json({ scan: updated });
   })
   // POST /api/scans — start a new scan (async — returns immediately)
   .post("/", async (c) => {

@@ -15,7 +15,9 @@ import {
   Play,
   Shield,
   Sparkles,
+  Square,
 } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 useHead({ title: "Scan Results — Trespass" });
 definePageMeta({ middleware: ["auth"] });
@@ -66,7 +68,7 @@ interface Scan {
   repo: { fullName: string; htmlUrl: string | null };
   repoId: string;
   startedAt: string | null;
-  status: "queued" | "running" | "done" | "error";
+  status: "cancelled" | "done" | "error" | "queued" | "running";
   summary: ScanSummary | null;
 }
 
@@ -86,10 +88,11 @@ async function fetchScan() {
     scan.value = res.scan;
     findings.value = res.findings;
 
-    if (
-      (res.scan.status === "done" || res.scan.status === "error") &&
-      pollInterval
-    ) {
+    const finished =
+      res.scan.status === "done" ||
+      res.scan.status === "error" ||
+      res.scan.status === "cancelled";
+    if (finished && pollInterval) {
       clearInterval(pollInterval);
     }
   } catch {
@@ -113,6 +116,30 @@ onUnmounted(() => {
 });
 
 const rescanning = ref(false);
+const stopping = ref(false);
+
+async function stopScan() {
+  if (!scan.value) {
+    return;
+  }
+  stopping.value = true;
+  try {
+    await $fetch(`${BASE}/api/scans/${scan.value.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+    await fetchScan();
+    toast.success("Scan stopped");
+  } catch {
+    toast.error("Failed to stop scan");
+  } finally {
+    stopping.value = false;
+  }
+}
 
 async function rescan() {
   if (!scan.value) {
@@ -282,6 +309,17 @@ function elapsed(start: string | null, end: string | null): string {
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <Button
+              v-if="scan.status === 'queued' || scan.status === 'running'"
+              size="sm"
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10 font-mono text-xs gap-1.5"
+              :disabled="stopping"
+              @click="stopScan"
+            >
+              <Square class="h-3.5 w-3.5" />
+              {{ stopping ? "Stopping..." : "Stop Scan" }}
+            </Button>
+            <Button
               size="sm"
               class="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5"
               :disabled="rescanning || scan.status === 'queued' || scan.status === 'running'"
@@ -310,7 +348,7 @@ function elapsed(start: string | null, end: string | null): string {
 
         <!-- Terminal progress -->
         <div
-          v-if="scan.status === 'queued' || scan.status === 'running' || (scan.status === 'done' && scan.progress?.length)"
+          v-if="scan.status === 'queued' || scan.status === 'running' || scan.status === 'cancelled' || (scan.status === 'done' && scan.progress?.length)"
           class="rounded-xl border border-border/60 bg-[#0d0d0d] overflow-hidden font-mono text-sm"
         >
           <!-- Title bar -->
@@ -371,6 +409,15 @@ function elapsed(start: string | null, end: string | null): string {
                   class="inline-block w-1.5 h-3 bg-primary/70 ml-0.5 animate-pulse align-middle"
                 />
               </span>
+            </div>
+
+            <!-- Cancelled line -->
+            <div
+              v-if="scan.status === 'cancelled'"
+              class="mt-3 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-red-400"
+            >
+              <span>✗</span>
+              <span>Scan stopped by user</span>
             </div>
 
             <!-- Summary line when done -->

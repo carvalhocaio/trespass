@@ -6,7 +6,7 @@ import {
   getFileTree,
   getPackageManifests,
 } from "@trespass/github";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { auditDependencies } from "./deps-auditor";
@@ -101,6 +101,24 @@ interface ProgressStep {
   key: string;
   label: string;
   status: ProgressStatus;
+}
+
+class ScanCancelledError extends Error {
+  constructor() {
+    super("Scan cancelled");
+    this.name = "ScanCancelledError";
+  }
+}
+
+async function checkCancelled(db: Db, scanId: string): Promise<void> {
+  const [row] = await db
+    .select({ status: scan.status })
+    .from(scan)
+    .where(eq(scan.id, scanId))
+    .limit(1);
+  if (row?.status === "cancelled") {
+    throw new ScanCancelledError();
+  }
 }
 
 async function pushProgress(
@@ -371,12 +389,15 @@ export async function runScan(input: ScanInput): Promise<void> {
     const octokit = createOctokit(input.pat);
 
     let steps = await phaseDepAudit(db, octokit, input, []);
+    await checkCancelled(db, input.scanId);
+
     const {
       steps: steps2,
       filesScanned,
       llmQueue,
     } = await phaseCodeScan(db, octokit, input, steps);
     steps = steps2;
+    await checkCancelled(db, input.scanId);
 
     let llmEnriched = false;
     if (input.llmConfig && llmQueue.length > 0) {
@@ -416,12 +437,15 @@ export async function runScan(input: ScanInput): Promise<void> {
     await db
       .update(scan)
       .set({ status: "done", finishedAt: new Date(), summary })
-      .where(eq(scan.id, input.scanId));
+      .where(and(eq(scan.id, input.scanId), eq(scan.status, "running")));
   } catch (err) {
+    if (err instanceof ScanCancelledError) {
+      return;
+    }
     const message = err instanceof Error ? err.message : String(err);
     await db
       .update(scan)
       .set({ status: "error", finishedAt: new Date(), error: message })
-      .where(eq(scan.id, input.scanId));
+      .where(and(eq(scan.id, input.scanId), eq(scan.status, "running")));
   }
 }

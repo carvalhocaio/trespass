@@ -20,6 +20,7 @@ export const scanStatusEnum = pgEnum("scan_status", [
   "running",
   "done",
   "error",
+  "cancelled",
 ]);
 
 export const severityEnum = pgEnum("severity", [

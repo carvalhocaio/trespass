@@ -302,6 +302,14 @@ function severityColor(s: string) {
               <span class="text-xs text-primary font-mono animate-pulse"
                 >Scanning...</span
               >
+              <Button
+                variant="ghost"
+                size="sm"
+                as-child
+                class="font-mono text-xs text-muted-foreground hover:text-foreground"
+              >
+                <NuxtLink :to="`/scans/${repo.lastScan.id}`">View →</NuxtLink>
+              </Button>
             </template>
             <template v-else>
               <Button
