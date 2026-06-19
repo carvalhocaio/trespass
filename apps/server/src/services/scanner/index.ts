@@ -354,21 +354,32 @@ async function phaseCodeScan(
   let filesScanned = 0;
   let filesWithFindings = 0;
   const llmQueue: { path: string; content: string }[] = [];
-  for (const file of scannableFiles) {
-    const result = await scanCodeFile(db, octokit, file.path, input);
-    if (!result) {
-      continue;
+  try {
+    for (const file of scannableFiles) {
+      await checkCancelled(db, input.scanId);
+      const result = await scanCodeFile(db, octokit, file.path, input);
+      if (!result) {
+        continue;
+      }
+      filesScanned++;
+      if (result.hasFindings) {
+        filesWithFindings++;
+      }
+      if (
+        input.llmConfig &&
+        (result.hasFindings || isLlmPriorityFile(file.path))
+      ) {
+        llmQueue.push({ path: file.path, content: result.content });
+      }
     }
-    filesScanned++;
-    if (result.hasFindings) {
-      filesWithFindings++;
+  } catch (err) {
+    if (err instanceof ScanCancelledError) {
+      await updateLastProgress(db, input.scanId, s, {
+        status: "error",
+        detail: "interrupted",
+      });
     }
-    if (
-      input.llmConfig &&
-      (result.hasFindings || isLlmPriorityFile(file.path))
-    ) {
-      llmQueue.push({ path: file.path, content: result.content });
-    }
+    throw err;
   }
   s = await updateLastProgress(db, input.scanId, s, {
     status: filesWithFindings > 0 ? "warn" : "done",
