@@ -21,6 +21,9 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 - Dashboard shows a "View →" link during active scans — navigate to the live progress screen without waiting for the scan to finish
 - Stop Scan button on the results page — cancels any queued or running scan immediately; the scanner checks for cancellation between phases to stop promptly
 - Re-scan button on results page — starts a new scan for the same repo and navigates to the fresh result
+- Native OS browser notifications when a scan finishes — shows repo name, critical/high finding counts, and final status; falls back to an in-app toast if permission is denied
+- Scan duration timer updates every second during active scans instead of jumping at each polling interval
+- Scans run to full completion regardless of how long LLM review takes — no forced timeout cap
 - Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation
 - LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers
 - Semantic versioning badge in the UI footer

@@ -214,34 +214,19 @@ export const scansRoute = new Hono<AppEnv>()
       })
       .returning();
 
-    // Fire-and-forget — scan runs in background
+    // Fire-and-forget — scan runs in background until completion
+    // Stuck scans (no update for >10 min) are detected by STUCK_THRESHOLD_MS in GET /:id
     const [owner, repoName] = repo.fullName.split("/") as [string, string];
-    const SCAN_TIMEOUT_MS = 4 * 60 * 1000;
     setImmediate(() => {
-      const deadline = new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Scan exceeded maximum duration")),
-          SCAN_TIMEOUT_MS
-        )
-      );
-      Promise.race([
-        runScan({
-          scanId,
-          repoId: repo.id,
-          userId: user.id,
-          owner,
-          repoName,
-          defaultBranch: repo.defaultBranch,
-          pat,
-          llmConfig,
-        }),
-        deadline,
-      ]).catch(async (err: unknown) => {
-        const message = err instanceof Error ? err.message : String(err);
-        await createDb()
-          .update(scan)
-          .set({ status: "error", error: message, finishedAt: new Date() })
-          .where(and(eq(scan.id, scanId), eq(scan.status, "running")));
+      runScan({
+        scanId,
+        repoId: repo.id,
+        userId: user.id,
+        owner,
+        repoName,
+        defaultBranch: repo.defaultBranch,
+        pat,
+        llmConfig,
       });
     });
 
