@@ -74,6 +74,26 @@ export const scansRoute = new Hono<AppEnv>()
       throw new HTTPException(404, { message: "Scan not found" });
     }
 
+    // Recover orphaned scans: if still "running" past 10 min, the worker died
+    const STUCK_THRESHOLD_MS = 10 * 60 * 1000;
+    if (
+      row.status === "running" &&
+      row.startedAt &&
+      Date.now() - row.startedAt.getTime() > STUCK_THRESHOLD_MS
+    ) {
+      await db
+        .update(scan)
+        .set({
+          status: "error",
+          error: "Scan timed out — process was interrupted",
+          finishedAt: new Date(),
+        })
+        .where(and(eq(scan.id, scanId), eq(scan.status, "running")));
+      row.status = "error";
+      row.error = "Scan timed out — process was interrupted";
+      row.finishedAt = new Date();
+    }
+
     const findings = await db
       .select()
       .from(finding)
@@ -196,22 +216,32 @@ export const scansRoute = new Hono<AppEnv>()
 
     // Fire-and-forget — scan runs in background
     const [owner, repoName] = repo.fullName.split("/") as [string, string];
+    const SCAN_TIMEOUT_MS = 4 * 60 * 1000;
     setImmediate(() => {
-      runScan({
-        scanId,
-        repoId: repo.id,
-        userId: user.id,
-        owner,
-        repoName,
-        defaultBranch: repo.defaultBranch,
-        pat,
-        llmConfig,
-      }).catch(async (err: unknown) => {
+      const deadline = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Scan exceeded maximum duration")),
+          SCAN_TIMEOUT_MS
+        )
+      );
+      Promise.race([
+        runScan({
+          scanId,
+          repoId: repo.id,
+          userId: user.id,
+          owner,
+          repoName,
+          defaultBranch: repo.defaultBranch,
+          pat,
+          llmConfig,
+        }),
+        deadline,
+      ]).catch(async (err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         await createDb()
           .update(scan)
           .set({ status: "error", error: message, finishedAt: new Date() })
-          .where(eq(scan.id, scanId));
+          .where(and(eq(scan.id, scanId), eq(scan.status, "running")));
       });
     });
 

@@ -29,6 +29,20 @@ const llmResponseSchema = z.object({
   findings: z.array(llmFindingSchema),
 });
 
+const LLM_CALL_TIMEOUT_MS = 60_000;
+
+function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  ms: number
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...init, signal: ctrl.signal }).finally(() =>
+    clearTimeout(timer)
+  );
+}
+
 const SYSTEM_PROMPT = `You are a senior application security engineer performing a code security review.
 Analyze the provided code snippet for security vulnerabilities, anti-patterns, and risks.
 
@@ -60,23 +74,27 @@ async function callOpenAI(
   config: LlmConfig,
   userMessage: string
 ): Promise<string> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
+  const res = await fetchWithTimeout(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.1,
+        max_tokens: 2048,
+        response_format: { type: "json_object" },
+      }),
     },
-    body: JSON.stringify({
-      model: config.model,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.1,
-      max_tokens: 2048,
-      response_format: { type: "json_object" },
-    }),
-  });
+    LLM_CALL_TIMEOUT_MS
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -93,20 +111,24 @@ async function callAnthropic(
   config: LlmConfig,
   userMessage: string
 ): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": config.apiKey,
-      "anthropic-version": "2023-06-01",
+  const res = await fetchWithTimeout(
+    "https://api.anthropic.com/v1/messages",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": config.apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: 2048,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userMessage }],
+      }),
     },
-    body: JSON.stringify({
-      model: config.model,
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-  });
+    LLM_CALL_TIMEOUT_MS
+  );
 
   if (!res.ok) {
     const err = await res.text();
@@ -125,19 +147,23 @@ async function callGoogle(
 ): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: [{ role: "user", parts: [{ text: userMessage }] }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 2048,
-        responseMimeType: "application/json",
-      },
-    }),
-  });
+  const res = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: userMessage }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json",
+        },
+      }),
+    },
+    LLM_CALL_TIMEOUT_MS
+  );
 
   if (!res.ok) {
     const err = await res.text();
