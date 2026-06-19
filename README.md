@@ -56,6 +56,10 @@ cp apps/server/.env.example apps/server/.env
 cp apps/web/.env.example apps/web/.env
 ```
 
+> **Note:** `apps/web/.env` must contain the same server variables as `apps/server/.env`.
+> This is because `apps/web/server/middleware/api.ts` embeds the Hono app inside Nuxt's
+> Nitro server. Both files must be kept in sync.
+
 Push the database schema:
 
 ```bash
@@ -95,6 +99,16 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 | Variable | Description | Required |
 |---|---|---|
 | `NUXT_PUBLIC_SERVER_URL` | Public URL of the API server | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `BETTER_AUTH_SECRET` | 32+ character secret for session signing | Yes |
+| `BETTER_AUTH_URL` | Public URL of the API server | Yes |
+| `CORS_ORIGIN` | Allowed CORS origin (frontend URL) | Yes |
+| `GITHUB_CLIENT_ID` | GitHub OAuth App client ID | Yes |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret | Yes |
+| `SECRET_ENCRYPTION_KEY` | 64-character hex key for AES-256-GCM | Yes |
+
+> These server variables are required because the Hono API is embedded inside Nuxt via
+> `server/middleware/api.ts`. Keep them in sync with `apps/server/.env`.
 
 ### Creating a GitHub OAuth App
 
