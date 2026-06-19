@@ -42,7 +42,11 @@ export function createApp() {
   return app;
 }
 
-if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
+if (
+  process.env.DEV_MODE !== "true" &&
+  process.env.NODE_ENV !== "test" &&
+  !process.env.VERCEL
+) {
   const app = createApp();
   serve({ fetch: app.fetch, port: 3000 }, (info) => {
     console.log(`Server running on http://localhost:${info.port}`);
