@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-06-19
+
+### Improved
+- LLM opt-in dialog extracted into a shared `ScanLlmDialog` component used by both Scan and Re-scan — buttons are now consistent size and the close (×) icon is removed since "No, skip" covers that action.
+
 ## [1.10.0] - 2026-06-19
 
 ### Added

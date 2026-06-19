@@ -358,39 +358,13 @@ function severityColor(s: string) {
     </div>
   </div>
 
-  <!-- LLM review opt-in dialog -->
-  <Dialog v-model:open="scanDialogOpen">
-    <DialogContent class="max-w-sm">
-      <DialogHeader>
-        <DialogTitle class="font-mono pr-6 truncate">
-          Scan — {{ pendingScanRepo?.name }}
-        </DialogTitle>
-        <DialogDescription>
-          Include LLM review
-          <span v-if="llmModel" class="font-mono text-foreground"
-            >({{ llmModel }})</span
-          >
-          in this scan?
-        </DialogDescription>
-      </DialogHeader>
-
-      <DialogFooter class="gap-2 sm:gap-2">
-        <Button
-          variant="outline"
-          class="font-mono text-xs"
-          :disabled="scanningId === pendingScanRepo?.id"
-          @click="pendingScanRepo && executeScan(pendingScanRepo, false)"
-        >
-          No, skip
-        </Button>
-        <Button
-          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs"
-          :disabled="scanningId === pendingScanRepo?.id"
-          @click="pendingScanRepo && executeScan(pendingScanRepo, true)"
-        >
-          Yes, include
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+  <ScanLlmDialog
+    :open="scanDialogOpen"
+    :title="`Scan — ${pendingScanRepo?.name}`"
+    :llm-model="llmModel"
+    :disabled="scanningId === pendingScanRepo?.id"
+    @update:open="scanDialogOpen = $event"
+    @skip="pendingScanRepo && executeScan(pendingScanRepo, false)"
+    @include="pendingScanRepo && executeScan(pendingScanRepo, true)"
+  />
 </template>

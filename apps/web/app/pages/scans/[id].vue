@@ -696,39 +696,13 @@ function elapsed(
     </template>
   </div>
 
-  <!-- LLM review opt-in dialog for re-scan -->
-  <Dialog v-model:open="rescanDialogOpen">
-    <DialogContent class="max-w-sm">
-      <DialogHeader>
-        <DialogTitle class="font-mono pr-6 truncate">
-          Re-scan — {{ scan?.repo.fullName }}
-        </DialogTitle>
-        <DialogDescription>
-          Include LLM review
-          <span v-if="llmModel" class="font-mono text-foreground"
-            >({{ llmModel }})</span
-          >
-          in this scan?
-        </DialogDescription>
-      </DialogHeader>
-
-      <DialogFooter class="gap-2 sm:gap-2">
-        <Button
-          variant="outline"
-          class="font-mono text-xs"
-          :disabled="rescanning"
-          @click="executeRescan(false)"
-        >
-          No, skip
-        </Button>
-        <Button
-          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs"
-          :disabled="rescanning"
-          @click="executeRescan(true)"
-        >
-          Yes, include
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+  <ScanLlmDialog
+    :open="rescanDialogOpen"
+    :title="`Re-scan — ${scan?.repo.fullName}`"
+    :llm-model="llmModel"
+    :disabled="rescanning"
+    @update:open="rescanDialogOpen = $event"
+    @skip="executeRescan(false)"
+    @include="executeRescan(true)"
+  />
 </template>
