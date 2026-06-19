@@ -72,12 +72,32 @@ interface Scan {
   summary: ScanSummary | null;
 }
 
+const notif = useNotification();
+
 const scan = ref<Scan | null>(null);
 const findings = ref<Finding[]>([]);
 const loading = ref(true);
 const expandedId = ref<string | null>(null);
+const now = ref(Date.now());
 
 let pollInterval: ReturnType<typeof setInterval> | null = null;
+let tickInterval: ReturnType<typeof setInterval> | null = null;
+
+function notifyScanFinished(s: Scan): void {
+  const repo = s.repo.fullName;
+  if (s.status === "done") {
+    const sum = s.summary;
+    const body =
+      sum && sum.total > 0
+        ? `${sum.critical > 0 ? `${sum.critical} critical · ` : ""}${sum.high > 0 ? `${sum.high} high · ` : ""}${sum.total} finding${sum.total === 1 ? "" : "s"} found`
+        : "No issues found — clean repository";
+    notif.notify(`Scan complete — ${repo}`, body);
+  } else if (s.status === "error") {
+    notif.notify(`Scan failed — ${repo}`, s.error ?? "Unknown error");
+  } else {
+    notif.notify(`Scan stopped — ${repo}`, "The scan was cancelled");
+  }
+}
 
 async function fetchScan() {
   try {
@@ -94,6 +114,8 @@ async function fetchScan() {
       res.scan.status === "cancelled";
     if (finished && pollInterval) {
       clearInterval(pollInterval);
+      pollInterval = null;
+      notifyScanFinished(res.scan);
     }
   } catch {
     /* ignore polling errors */
@@ -103,15 +125,22 @@ async function fetchScan() {
 }
 
 onMounted(async () => {
+  tickInterval = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
   await fetchScan();
   if (scan.value?.status === "queued" || scan.value?.status === "running") {
     pollInterval = setInterval(fetchScan, 3000);
+    await notif.requestPermission();
   }
 });
 
 onUnmounted(() => {
   if (pollInterval) {
     clearInterval(pollInterval);
+  }
+  if (tickInterval) {
+    clearInterval(tickInterval);
   }
 });
 
@@ -249,12 +278,16 @@ const severityColors: Record<
   },
 };
 
-function elapsed(start: string | null, end: string | null): string {
+function elapsed(
+  start: string | null,
+  end: string | null,
+  currentTime = Date.now()
+): string {
   if (!start) {
     return "";
   }
   const s = new Date(start).getTime();
-  const e = end ? new Date(end).getTime() : Date.now();
+  const e = end ? new Date(end).getTime() : currentTime;
   const sec = Math.round((e - s) / 1000);
   return sec < 60 ? `${sec}s` : `${Math.floor(sec / 60)}m ${sec % 60}s`;
 }
@@ -299,7 +332,7 @@ function elapsed(start: string | null, end: string | null): string {
             >
               <span class="flex items-center gap-1">
                 <Clock class="h-3.5 w-3.5" />
-                {{ elapsed(scan.startedAt, scan.finishedAt) }}
+                {{ elapsed(scan.startedAt, scan.finishedAt, now) }}
               </span>
               <span v-if="scan.summary?.filesScanned">
                 {{ scan.summary.filesScanned }}
@@ -460,7 +493,8 @@ function elapsed(start: string | null, end: string | null): string {
                 >
               </div>
               <p class="text-xs text-muted-foreground mt-1">
-                Run complete in {{ elapsed(scan.startedAt, scan.finishedAt) }}
+                Run complete in
+                {{ elapsed(scan.startedAt, scan.finishedAt, now) }}
               </p>
             </template>
           </div>

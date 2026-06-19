@@ -42,6 +42,15 @@ export function createApp() {
   return app;
 }
 
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+  process.exit(1);
+});
+
 if (
   process.env.DEV_MODE !== "true" &&
   process.env.NODE_ENV !== "test" &&

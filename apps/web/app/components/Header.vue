@@ -12,7 +12,9 @@ const navLinks = [{ label: "Dashboard", to: "/dashboard" }];
   <header
     class="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-sm"
   >
-    <div class="container mx-auto px-4 h-14 flex items-center justify-between">
+    <div
+      class="container mx-auto px-4 max-w-5xl h-14 flex items-center justify-between"
+    >
       <div class="flex items-center gap-6">
         <NuxtLink to="/" class="flex items-center gap-2 group">
           <Shield

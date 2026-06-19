@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-06-19
+
+### Added
+- Notificações nativas do sistema operacional ao término de um scan — exibe o repositório, contagem de findings críticos/altos e status (concluído, falhou, cancelado). Solicita permissão ao iniciar um scan.
+
+### Fixed
+- Timer de duração na tela do scan agora atualiza segundo a segundo em vez de saltar a cada 3 s — tick independente do polling.
+- Timeout forçado de 4 minutos (`Promise.race`) removido da rota `POST /api/scans` — o scan agora roda até conclusão completa incluindo LLM review; scans realmente presos são detectados pelo `STUCK_THRESHOLD_MS` de 10 min.
+- Header e footer alinhados à mesma largura máxima (`max-w-5xl`) que o conteúdo principal.
+- Pool de conexões PostgreSQL migrado para singleton com configurações otimizadas para o Neon free tier (`max: 3`, `idleTimeoutMillis: 240 s`, `connectionTimeoutMillis: 30 s`) — elimina `ETIMEDOUT` por pool exaurido sob carga concorrente.
+- Guards de processo (`unhandledRejection` / `uncaughtException`) adicionados ao servidor — erros inesperados são logados sem derrubar o processo; exceções não capturadas encerram com `exit(1)` para reinício limpo pelo supervisor.
+- Configuração SSL do banco corrigida para `sslmode=verify-full`. (#2e94dfa)
+- Servidor Hono não conflita mais com a porta 3000 quando embutido como middleware Nuxt. (#bf64e01)
+
+### Documentation
+- Variáveis de ambiente atualizadas na documentação. (#e72f1ae)
+
 ## [1.8.1] - 2026-06-19
 
 ### Fixed

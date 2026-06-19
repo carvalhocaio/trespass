@@ -321,7 +321,7 @@ const steps = [
     <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
     <footer class="border-t border-border/30 py-8">
       <div
-        class="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+        class="container mx-auto px-4 max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div class="flex items-center gap-2 text-muted-foreground text-sm">
           <Shield class="h-4 w-4 text-primary" />
