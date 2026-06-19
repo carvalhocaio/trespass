@@ -171,4 +171,35 @@ export const scansRoute = new Hono<AppEnv>()
     });
 
     return c.json({ scan: newScan }, 201);
+  })
+  // POST /api/scans/:id/cancel — stop an in-progress (queued/running) scan
+  .post("/:id/cancel", async (c) => {
+    const user = c.get("user");
+    const scanId = c.req.param("id");
+    const db = createDb();
+
+    const [row] = await db
+      .select({ id: scan.id, status: scan.status })
+      .from(scan)
+      .where(and(eq(scan.id, scanId), eq(scan.userId, user.id)))
+      .limit(1);
+
+    if (!row) {
+      throw new HTTPException(404, { message: "Scan not found" });
+    }
+
+    if (row.status !== "queued" && row.status !== "running") {
+      throw new HTTPException(409, {
+        message: "Scan is not running and cannot be stopped",
+      });
+    }
+
+    // Flip status to "cancelled" — the running scan polls this and bails out.
+    const [updated] = await db
+      .update(scan)
+      .set({ status: "cancelled", finishedAt: new Date() })
+      .where(and(eq(scan.id, scanId), eq(scan.userId, user.id)))
+      .returning();
+
+    return c.json({ scan: updated });
   });

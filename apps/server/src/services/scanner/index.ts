@@ -6,7 +6,7 @@ import {
   getFileTree,
   getPackageManifests,
 } from "@trespass/github";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { auditDependencies } from "./deps-auditor";
@@ -93,6 +93,28 @@ interface FindingRow {
 }
 
 type Db = ReturnType<typeof createDb>;
+
+// Thrown when a scan is cancelled mid-run so the runner can bail out without
+// overwriting the "cancelled" status with "done" or "error".
+class ScanCancelledError extends Error {
+  constructor() {
+    super("Scan cancelled by user");
+    this.name = "ScanCancelledError";
+  }
+}
+
+// Cooperative cancellation checkpoint — the cancel route flips the scan status
+// to "cancelled" in the DB; the running scan polls it here and aborts.
+async function assertNotCancelled(db: Db, scanId: string): Promise<void> {
+  const [row] = await db
+    .select({ status: scan.status })
+    .from(scan)
+    .where(eq(scan.id, scanId))
+    .limit(1);
+  if (row?.status === "cancelled") {
+    throw new ScanCancelledError();
+  }
+}
 
 type ProgressStatus = "done" | "error" | "running" | "warn";
 
@@ -336,7 +358,12 @@ async function phaseCodeScan(
   let filesScanned = 0;
   let filesWithFindings = 0;
   const llmQueue: { path: string; content: string }[] = [];
+  let checked = 0;
   for (const file of scannableFiles) {
+    // Poll for cancellation periodically — cheap DB read vs. each GitHub fetch
+    if (checked++ % 15 === 0) {
+      await assertNotCancelled(db, input.scanId);
+    }
     const result = await scanCodeFile(db, octokit, file.path, input);
     if (!result) {
       continue;
@@ -362,15 +389,25 @@ async function phaseCodeScan(
 export async function runScan(input: ScanInput): Promise<void> {
   const db = createDb();
 
-  await db
+  // Transition queued → running atomically. If the row is no longer queued
+  // (e.g. cancelled before the runner started), bail out without clobbering it.
+  const started = await db
     .update(scan)
     .set({ status: "running", startedAt: new Date(), progress: [] })
-    .where(eq(scan.id, input.scanId));
+    .where(and(eq(scan.id, input.scanId), eq(scan.status, "queued")))
+    .returning({ id: scan.id });
+
+  if (started.length === 0) {
+    return;
+  }
 
   try {
     const octokit = createOctokit(input.pat);
 
+    await assertNotCancelled(db, input.scanId);
     let steps = await phaseDepAudit(db, octokit, input, []);
+
+    await assertNotCancelled(db, input.scanId);
     const {
       steps: steps2,
       filesScanned,
@@ -380,6 +417,7 @@ export async function runScan(input: ScanInput): Promise<void> {
 
     let llmEnriched = false;
     if (input.llmConfig && llmQueue.length > 0) {
+      await assertNotCancelled(db, input.scanId);
       steps = await pushProgress(db, input.scanId, steps, {
         key: "llm_review",
         label: "LLM code review...",
@@ -413,11 +451,17 @@ export async function runScan(input: ScanInput): Promise<void> {
       summary[f.severity]++;
     }
 
+    // Only mark done if the scan is still running — a concurrent cancel may
+    // have flipped the status after the last checkpoint.
     await db
       .update(scan)
       .set({ status: "done", finishedAt: new Date(), summary })
-      .where(eq(scan.id, input.scanId));
+      .where(and(eq(scan.id, input.scanId), eq(scan.status, "running")));
   } catch (err) {
+    if (err instanceof ScanCancelledError) {
+      // Status is already "cancelled" — leave it untouched.
+      return;
+    }
     const message = err instanceof Error ? err.message : String(err);
     await db
       .update(scan)

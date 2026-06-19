@@ -15,7 +15,9 @@ import {
   Play,
   Shield,
   Sparkles,
+  Square,
 } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 useHead({ title: "Scan Results — Trespass" });
 definePageMeta({ middleware: ["auth"] });
@@ -66,7 +68,7 @@ interface Scan {
   repo: { fullName: string; htmlUrl: string | null };
   repoId: string;
   startedAt: string | null;
-  status: "queued" | "running" | "done" | "error";
+  status: "queued" | "running" | "done" | "error" | "cancelled";
   summary: ScanSummary | null;
 }
 
@@ -86,10 +88,11 @@ async function fetchScan() {
     scan.value = res.scan;
     findings.value = res.findings;
 
-    if (
-      (res.scan.status === "done" || res.scan.status === "error") &&
-      pollInterval
-    ) {
+    const isTerminal =
+      res.scan.status === "done" ||
+      res.scan.status === "error" ||
+      res.scan.status === "cancelled";
+    if (isTerminal && pollInterval) {
       clearInterval(pollInterval);
     }
   } catch {
@@ -128,6 +131,27 @@ async function rescan() {
     navigateTo(`/scans/${res.scan.id}`);
   } catch {
     rescanning.value = false;
+  }
+}
+
+const stopping = ref(false);
+
+async function stopScan() {
+  if (!scan.value) {
+    return;
+  }
+  stopping.value = true;
+  try {
+    await $fetch(`${BASE}/api/scans/${scan.value.id}/cancel`, {
+      method: "POST",
+      credentials: "include",
+    });
+    toast.success("Scan stopped");
+    await fetchScan();
+  } catch {
+    toast.error("Failed to stop scan");
+  } finally {
+    stopping.value = false;
   }
 }
 
@@ -282,9 +306,20 @@ function elapsed(start: string | null, end: string | null): string {
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <Button
+              v-if="scan.status === 'queued' || scan.status === 'running'"
+              size="sm"
+              class="bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 font-mono text-xs gap-1.5"
+              :disabled="stopping"
+              @click="stopScan"
+            >
+              <Square class="h-3 w-3" />
+              {{ stopping ? "Stopping..." : "Stop scan" }}
+            </Button>
+            <Button
+              v-else
               size="sm"
               class="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5"
-              :disabled="rescanning || scan.status === 'queued' || scan.status === 'running'"
+              :disabled="rescanning"
               @click="rescan"
             >
               <Play class="h-3.5 w-3.5" />
@@ -431,6 +466,21 @@ function elapsed(start: string | null, end: string | null): string {
           </p>
           <p class="text-xs text-muted-foreground mt-1 font-mono">
             {{ scan.error }}
+          </p>
+        </div>
+
+        <div
+          v-else-if="scan.status === 'cancelled'"
+          class="p-4 rounded-xl border border-border/60 bg-secondary/30"
+        >
+          <p
+            class="text-sm font-medium text-muted-foreground flex items-center gap-2"
+          >
+            <Square class="h-4 w-4" />
+            Scan stopped
+          </p>
+          <p class="text-xs text-muted-foreground mt-1 font-mono">
+            This scan was stopped before it finished. Re-scan to run it again.
           </p>
         </div>
 

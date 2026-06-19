@@ -2,6 +2,7 @@
 import {
   AlertTriangle,
   GitBranch,
+  Loader2,
   Play,
   RefreshCw,
   Search,
@@ -9,6 +10,7 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Square,
 } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
@@ -49,6 +51,16 @@ const search = ref("");
 const loadingRepos = ref(true);
 const syncing = ref(false);
 const scanningId = ref<string | null>(null);
+const stoppingId = ref<string | null>(null);
+
+// A scan is in progress (and thus viewable / stoppable) while it has no summary
+// yet and its status is queued or running.
+function isScanning(repo: Repo): boolean {
+  const status = repo.lastScan?.status;
+  return (
+    !repo.lastScan?.summary && (status === "queued" || status === "running")
+  );
+}
 
 const filteredRepos = computed(() => {
   const q = search.value.toLowerCase();
@@ -102,6 +114,25 @@ async function startScan(repo: Repo) {
   } catch {
     toast.error("Failed to start scan");
     scanningId.value = null;
+  }
+}
+
+async function stopScan(repo: Repo) {
+  if (!repo.lastScan) {
+    return;
+  }
+  stoppingId.value = repo.id;
+  try {
+    await $fetch(`${BASE}/api/scans/${repo.lastScan.id}/cancel`, {
+      method: "POST",
+      credentials: "include",
+    });
+    toast.success(`Scan stopped for ${repo.name}`);
+    await fetchRepos();
+  } catch {
+    toast.error("Failed to stop scan");
+  } finally {
+    stoppingId.value = null;
   }
 }
 
@@ -298,10 +329,28 @@ function severityColor(s: string) {
                 <NuxtLink :to="`/scans/${repo.lastScan.id}`">View →</NuxtLink>
               </Button>
             </template>
-            <template v-else-if="repo.lastScan?.status === 'running'">
-              <span class="text-xs text-primary font-mono animate-pulse"
-                >Scanning...</span
+            <template v-else-if="isScanning(repo)">
+              <Button
+                variant="ghost"
+                size="sm"
+                as-child
+                class="font-mono text-xs text-primary hover:text-primary gap-1.5"
               >
+                <NuxtLink :to="`/scans/${repo.lastScan?.id}`">
+                  <Loader2 class="h-3.5 w-3.5 animate-spin" />
+                  Scanning...
+                </NuxtLink>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="font-mono text-xs text-muted-foreground hover:text-destructive gap-1.5"
+                :disabled="stoppingId === repo.id"
+                @click.stop="stopScan(repo)"
+              >
+                <Square class="h-3 w-3" />
+                {{ stoppingId === repo.id ? "Stopping..." : "Stop" }}
+              </Button>
             </template>
             <template v-else>
               <Button

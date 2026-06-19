@@ -8,6 +8,13 @@
       "when": 1781751447716,
       "tag": "0000_worried_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781838563627,
+      "tag": "0001_goofy_smasher",
+      "breakpoints": true
     }
   ]
 }
