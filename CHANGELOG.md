@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-06-19
+
+### Fixed
+- Scans que travavam permanentemente em "running" após timeout do processo agora são marcados como `error` automaticamente — inclui timeout por chamada LLM (60 s), timeout global do scan (4 min) e detecção lazy de processos órfãos. (#de6d1e8)
+
 ## [1.8.0] - 2026-06-18
 
 ### Fixed
