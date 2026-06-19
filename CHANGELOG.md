@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-06-19
+
+### Fixed
+- Browser notifications now display the Trespass shield icon instead of the default Nuxt favicon.
+
 ## [1.10.1] - 2026-06-19
 
 ### Improved

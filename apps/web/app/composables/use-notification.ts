@@ -12,7 +12,7 @@ export function useNotification() {
 
   function notify(title: string, body: string, onClick?: () => void): void {
     if (supported && Notification.permission === "granted") {
-      const n = new Notification(title, { body, icon: "/favicon.ico" });
+      const n = new Notification(title, { body, icon: "/favicon.svg" });
       if (onClick) {
         n.onclick = () => {
           window.focus();
