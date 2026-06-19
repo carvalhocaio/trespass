@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-18
+
+### Fixed
+- "Stop Scan" agora para o scan imediatamente ao pressionar o botão — o scanner verifica o cancelamento antes de cada arquivo no loop, em vez de apenas entre fases. O passo "Scanning code patterns..." agora exibe ✗ interrupted ao ser interrompido. (#a5e7671)
+
 ## [1.7.0] - 2026-06-18
 
 ### Added
