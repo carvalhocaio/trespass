@@ -6,7 +6,16 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".nuxt/**", ".output/**", ".vercel/output/**"],
-      "env": ["NUXT_PUBLIC_SERVER_URL"]
+      "env": [
+        "NUXT_PUBLIC_SERVER_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "CORS_ORIGIN",
+        "DATABASE_URL",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "SECRET_ENCRYPTION_KEY"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
