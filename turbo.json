@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "../../package.json"],
       "outputs": ["dist/**", ".nuxt/**", ".output/**", ".vercel/output/**"],
       "env": [
         "NUXT_PUBLIC_SERVER_URL",
