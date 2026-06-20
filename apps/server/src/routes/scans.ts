@@ -75,8 +75,8 @@ export const scansRoute = new Hono<AppEnv>()
       throw new HTTPException(404, { message: "Scan not found" });
     }
 
-    // Recover orphaned scans: if still "running" past 10 min, the worker died
-    const STUCK_THRESHOLD_MS = 10 * 60 * 1000;
+    // Recover orphaned scans: if still "running" past 30 min, the worker died
+    const STUCK_THRESHOLD_MS = 30 * 60 * 1000;
     if (
       row.status === "running" &&
       row.startedAt &&

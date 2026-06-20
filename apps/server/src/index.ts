@@ -38,6 +38,7 @@ export function createApp() {
   app.route("/api", api);
 
   app.get("/", (c) => c.text("OK"));
+  app.get("/api/health", (c) => c.json({ ok: true }));
 
   return app;
 }
@@ -51,13 +52,10 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-if (
-  process.env.DEV_MODE !== "true" &&
-  process.env.NODE_ENV !== "test" &&
-  !process.env.VERCEL
-) {
+if (process.env.SERVER_STANDALONE === "true") {
   const app = createApp();
-  serve({ fetch: app.fetch, port: 3000 }, (info) => {
+  const port = Number(process.env.PORT ?? 3000);
+  serve({ fetch: app.fetch, port }, (info) => {
     console.log(`Server running on http://localhost:${info.port}`);
   });
 }
