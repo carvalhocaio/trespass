@@ -38,7 +38,7 @@ export function createApp() {
   app.route("/api", api);
 
   app.get("/", (c) => c.text("OK"));
-  app.get("/api/health", (c) => c.json({ ok: true }));
+  app.get("/health", (c) => c.json({ ok: true }));
 
   return app;
 }

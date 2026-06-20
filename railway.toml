@@ -4,7 +4,7 @@ buildCommand = "pnpm --filter web build"
 
 [deploy]
 startCommand = "node apps/web/.output/server/index.mjs"
-healthcheckPath = "/api/health"
+healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
