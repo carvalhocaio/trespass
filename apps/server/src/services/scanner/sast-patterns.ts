@@ -51,7 +51,7 @@ const PATTERNS: SastPattern[] = [
     remediation:
       "Avoid passing user input to shell commands. Use safe alternatives (e.g., Node.js `child_process.execFile` with an argument array, not a shell string).",
     regex:
-      /(?:exec|spawn|execSync|spawnSync|system|popen|subprocess\.run)\s*\(/,
+      /(?<!\.)(?:exec|spawn|execSync|spawnSync|system|popen|subprocess\.run)\s*\(/,
     extensions: ["ts", "js", "py", "rb", "go"],
   },
   {
