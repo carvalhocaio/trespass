@@ -661,7 +661,7 @@ function elapsed(
                       </span>
                     </div>
                     <pre
-                      class="p-3 text-xs font-mono text-foreground overflow-x-auto leading-relaxed"
+                      class="p-3 text-xs font-mono text-foreground whitespace-pre-wrap break-words leading-relaxed"
                     >{{ f.snippet }}</pre>
                   </div>
 
