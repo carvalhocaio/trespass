@@ -33,7 +33,7 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 
 - **Frontend**: Nuxt 4 · Vue 3 · shadcn-vue · Tailwind CSS v4
 - **Backend**: Hono · Node.js
-- **Database**: PostgreSQL (tested on [Neon](https://neon.tech)) · Drizzle ORM
+- **Database**: PostgreSQL · Drizzle ORM
 - **Auth**: Better-Auth with GitHub OAuth
 - **Monorepo**: pnpm workspaces · Turborepo
 - **Linting**: Biome (ultracite ruleset)
@@ -42,7 +42,7 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 
 - Node.js 22+
 - pnpm 11+
-- PostgreSQL 15+ (or a Neon connection string)
+- PostgreSQL 15+
 - A GitHub OAuth App (Client ID + Secret)
 
 ## Installation

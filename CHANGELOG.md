@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-06-20
+
+### Fixed
+- Scans no longer interrupted mid-execution — migrated from Vercel serverless to Railway (persistent Node.js process), eliminating the platform timeout that killed long-running and LLM-assisted scans. (#c87ce5b)
+- Inconsistent dark background tone across pages — content area now uses a uniform color, removing the visible contrast between card sections and empty page space. (#676141c)
+
 ## [1.10.2] - 2026-06-19
 
 ### Fixed
