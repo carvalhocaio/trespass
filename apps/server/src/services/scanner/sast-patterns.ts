@@ -33,7 +33,7 @@ const PATTERNS: SastPattern[] = [
   },
   {
     id: "eval-usage",
-    title: "Dangerous eval() Usage",
+    title: "Dangerous eval Usage",
     description:
       "eval() executes arbitrary code and is a critical injection vector when fed user-controlled input.",
     severity: "critical",
