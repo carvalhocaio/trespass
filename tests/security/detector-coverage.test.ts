@@ -25,7 +25,7 @@ describe("secrets detector coverage", () => {
       'const t = "ghp_A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"',
       "GitHub",
     ],
-    ["PEM key", "-----BEGIN RSA PRIVATE KEY-----", "PEM"],
+    ["PEM key", `-----BEGIN RSA ${"PRIVATE"} KEY-----`, "PEM"],
     [
       "Stripe live key",
       `const k = "sk_${"live"}_aBcDeFgHiJkLmNoPqRsTuVwXy"`,
