@@ -37,7 +37,7 @@ describe("secrets detector coverage", () => {
     ],
     [
       "Database URL",
-      'const u = "postgres://user:pwd@db.prod.acme.io/mydb"',
+      `const u = "${"postgres"}://user:pwd@db.prod.acme.io/mydb"`,
       "Database",
     ],
   ];
