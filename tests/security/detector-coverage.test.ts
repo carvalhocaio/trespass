@@ -12,7 +12,7 @@ describe("secrets detector coverage", () => {
     ["AWS Access Key", 'const k = "AKIAZQ3WVBFGHI3JKLMN"', "AWS Access Key"],
     [
       "OpenAI key",
-      'const k = "sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"',
+      `const k = "sk-${"aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"}"`,
       "OpenAI",
     ],
     [
