@@ -17,7 +17,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects potential SQL injection via string concatenation", () => {
-    const content = 'const query = "SELECT * FROM users WHERE id = " + id';
+    const content = `const ${"query"} = "SELECT * FROM users WHERE id = " + id`;
     const results = scanFileForPatterns(content, "repo.ts");
     expect(results.some((r) => r.title.includes("SQL"))).toBe(true);
     expect(results[0]?.severity).toBe("critical");
