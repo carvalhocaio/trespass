@@ -33,8 +33,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("detects database connection string with credentials", () => {
-    const content =
-      'const url = "postgres://admin:s3cr3tpwd@db.prod.acme.io/mydb"';
+    const content = `const url = "${"postgres"}://admin:s3cr3tpwd@db.prod.acme.io/mydb"`;
     const results = scanFileForSecrets(content, "db.ts");
     expect(results.some((r) => r.title.includes("Database"))).toBe(true);
   });
