@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-06-21
+
+### Fixed
+
+- SAST scanner no longer flags `RegExp.prototype.exec()` method calls as potential shell command injection — only standalone `exec()`/`execSync()` calls are detected. (`#764f5b4`, `#7f9e267`)
+- SAST scanner no longer flags `eval` appearing inside string literals or documentation text — only actual `eval(expression)` calls in code are detected. (`#15ea3d4`, `#007d0bd`, `#8b73367`)
+
 ## [1.11.0] - 2026-06-20
 
 ### Fixed
