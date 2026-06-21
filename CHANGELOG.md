@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-06-21
+
+### Improved
+
+- Test suite fixtures no longer cause the scanner to report false positives when scanning this repository itself. (`#97d17b5`…`#248b2ff`)
+
 ## [1.12.0] - 2026-06-21
 
 ### Fixed
