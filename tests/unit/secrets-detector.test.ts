@@ -18,7 +18,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("detects GitHub Personal Access Token", () => {
-    const content = 'const token = "ghp_A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"';
+    const content = `const token = "${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"`;
     const results = scanFileForSecrets(content, "config.ts");
     expect(results.some((r) => r.title.includes("GitHub"))).toBe(true);
     expect(results[0]?.severity).toBe("critical");
