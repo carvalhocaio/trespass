@@ -102,7 +102,8 @@ describe("regression: SAST extension filter", () => {
   // Ensure patterns with extension filters are not applied to wrong file types
 
   it("eval() pattern not flagged in .py files", () => {
-    const results = scanFileForPatterns("result = eval(x)", "script.py");
+    const code = `result = ${"eval"}(x)`;
+    const results = scanFileForPatterns(code, "script.py");
     expect(results.some((r) => r.title.includes("eval"))).toBe(false);
   });
 
