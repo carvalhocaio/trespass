@@ -86,10 +86,12 @@ export function parseNpmDeps(
       ...pkg.dependencies,
       ...pkg.devDependencies,
     };
-    return Object.entries(all).map(([name, version]) => ({
-      name,
-      version: version.replace(NPM_VERSION_STRIP_RE, ""),
-    }));
+    return Object.entries(all)
+      .map(([name, version]) => ({
+        name,
+        version: version.replace(NPM_VERSION_STRIP_RE, ""),
+      }))
+      .filter((d) => d.version !== "");
   } catch {
     return [];
   }
