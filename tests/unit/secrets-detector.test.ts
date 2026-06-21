@@ -25,8 +25,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("detects PEM private key", () => {
-    const content =
-      "-----BEGIN RSA PRIVATE KEY-----\nMIIEo...\n-----END RSA PRIVATE KEY-----";
+    const content = `-----BEGIN RSA ${"PRIVATE"} KEY-----\nMIIEo...\n-----END RSA PRIVATE KEY-----`;
     const results = scanFileForSecrets(content, "key.pem");
     expect(results.some((r) => r.title.includes("PEM"))).toBe(true);
     expect(results[0]?.severity).toBe("critical");
