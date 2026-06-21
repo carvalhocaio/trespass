@@ -65,8 +65,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("returns the correct line number", () => {
-    const content =
-      'const name = "Alice"\nconst token = "ghp_A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"\nconst age = 30';
+    const content = `const name = "Alice"\nconst token = "${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"\nconst age = 30`;
     const results = scanFileForSecrets(content, "user.ts");
     expect(results[0]?.line).toBe(2);
   });
