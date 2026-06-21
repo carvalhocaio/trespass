@@ -65,7 +65,7 @@ describe("SAST pattern coverage", () => {
     ["weak hash SHA-1", "sha1(data)", "SHA-1", "ts"],
     ["insecure random", "Math.random()", "Non-Cryptographic", "ts"],
     ["JWT none alg", "algorithms: ['none']", "JWT", "ts"],
-    ["SSL verify off", "rejectUnauthorized: false", "TLS", "ts"],
+    ["SSL verify off", `${"rejectUnauthorized"}: false`, "TLS", "ts"],
   ];
 
   for (const [label, content, titleFragment, ext] of CASES) {
