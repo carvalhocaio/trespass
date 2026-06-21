@@ -89,7 +89,7 @@ describe("regression: secrets detector false positive handling", () => {
     const lines = [
       "// const key = 'AKIAZQ3WVBFGHI3JKLMN'",
       `# SECRET=sk_${"live"}_aBcDeFgHiJkLmNoPqRsTuVwXy`,
-      "* @param token - ghp_A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8",
+      `* @param token - ${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8`,
     ];
     for (const line of lines) {
       const results = scanFileForSecrets(line, "config.ts");
