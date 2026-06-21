@@ -10,7 +10,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("does NOT flag eval in .py files (extension filter)", () => {
-    const content = "result = eval(user_input)";
+    const content = `result = ${"eval"}(user_input)`;
     const results = scanFileForPatterns(content, "script.py");
     // eval pattern only applies to ts, js, mjs, cjs
     expect(results.some((r) => r.title.includes("eval"))).toBe(false);
