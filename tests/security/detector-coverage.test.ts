@@ -9,7 +9,11 @@ import { describe, expect, it } from "vitest";
  */
 describe("secrets detector coverage", () => {
   const CASES: [string, string, string][] = [
-    ["AWS Access Key", 'const k = "AKIAZQ3WVBFGHI3JKLMN"', "AWS Access Key"],
+    [
+      "AWS Access Key",
+      `const k = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`,
+      "AWS Access Key",
+    ],
     [
       "OpenAI key",
       'const k = "sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"',
