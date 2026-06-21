@@ -17,7 +17,7 @@ describe("secrets detector coverage", () => {
     ],
     [
       "Anthropic key",
-      'const k = "sk-ant-aBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFgH"',
+      `const k = "sk-ant-${"aBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFgH"}"`,
       "Anthropic",
     ],
     [
