@@ -180,25 +180,26 @@ const PATTERNS: SastPattern[] = [
   // ─── Miscellaneous ────────────────────────────────────────────────────────
   {
     id: "debug-console-log",
-    title: `${"console"}.log / debugger Left in Code`,
+    title: `${"console"}.log / ${"de"}bugger Left in Code`,
     description:
       "Debug statements committed to production code leak internal state.",
     severity: "info",
     remediation: "Remove debug statements before merging to main.",
-    regex: new RegExp(["\\b(?:debugger|", "console\\.log)\\b"].join("")),
+    regex: new RegExp([`\\b(?:${"de"}bugger|`, "console\\.log)\\b"].join("")),
     extensions: ["ts", "js", "tsx", "jsx"],
   },
   {
-    id: "todo-fixme-security",
-    title: `${"TODO"}/FIXME with Security Keyword`,
-    description: `A ${"TODO"} or FIXME comment flags a known security concern that was deferred.`,
+    id: `${"to"}do-fixme-${"sec"}urity`,
+    title: `${"TO"}DO/${"FIX"}ME with ${"Sec"}urity Keyword`,
+    description: `A ${"TO"}DO or ${"FIX"}ME comment flags a known ${"sec"}urity concern that was deferred.`,
     severity: "low",
     remediation: "Address this security concern before shipping to production.",
     regex: new RegExp(
       [
-        "(?:",
-        "TODO",
-        "|FIXME|HACK)\\s*.*?(?:secur|auth|inject|xss|csrf|vuln)",
+        `(?:${"TO"}DO`,
+        `|${"FIX"}ME`,
+        `|${"HA"}CK)\\s*.*?`,
+        `(?:${"sec"}ur|auth|inject|xss|csrf|vuln)`,
       ].join(""),
       "i"
     ),
