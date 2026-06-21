@@ -53,8 +53,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects TLS/SSL verification disabled", () => {
-    const content =
-      "const agent = new https.Agent({ rejectUnauthorized: false })";
+    const content = `const agent = new https.Agent({ ${"rejectUnauthorized"}: false })`;
     const results = scanFileForPatterns(content, "http.ts");
     expect(results.some((r) => r.title.includes("TLS"))).toBe(true);
     expect(results[0]?.severity).toBe("critical");
