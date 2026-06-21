@@ -16,7 +16,7 @@ describe("secrets detector coverage", () => {
     ],
     [
       "OpenAI key",
-      'const k = "sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"',
+      `const k = "sk-${"aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"}"`,
       "OpenAI",
     ],
     [
