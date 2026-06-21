@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.2] - 2026-06-21
+
+### Fixed
+
+- SAST scanner no longer flags its own pattern metadata strings (title, description, remediation) for `dangerouslySetInnerHTML` and `Math.random()` patterns. (`#830371a`, `#e083b7b`)
+
 ## [1.12.1] - 2026-06-21
 
 ### Improved
