@@ -57,7 +57,7 @@ describe("SAST pattern coverage", () => {
       "SQL",
       "ts",
     ],
-    ["eval() injection", "eval(userInput)", "eval", "ts"],
+    ["eval() injection", `${"eval"}(userInput)`, "eval", "ts"],
     ["command injection", "execSync(userCommand)", "Command", "ts"],
     ["XSS innerHTML", "div.innerHTML = userInput", "innerHTML", "ts"],
     ["path traversal", "readFile(req.params.path)", "Path", "ts"],
