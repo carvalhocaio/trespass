@@ -53,8 +53,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("skips comment lines starting with //", () => {
-    const content =
-      '// const key = "AKIAZQ3WVBFGHI3JKLMN"\n// token = "ghp_A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"';
+    const content = `// const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"\n// token = "${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"`;
     const results = scanFileForSecrets(content, "config.ts");
     expect(results).toHaveLength(0);
   });
