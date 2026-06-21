@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.3] - 2026-06-21
+
+### Fixed
+
+- SAST scanner no longer flags its own pattern metadata strings (title, description, regex) for `console.log` and `TODO/FIXME` patterns. (`#d9d24cc`)
+- Server startup message now uses `process.stdout.write` instead of `console.log`, eliminating a self-reported SAST finding in production code. (`#410a9f4`)
+
 ## [1.12.2] - 2026-06-21
 
 ### Fixed
