@@ -53,7 +53,7 @@ describe("SAST pattern coverage", () => {
   const CASES: [string, string, string, string][] = [
     [
       "SQL injection",
-      'const sql = "SELECT * FROM users WHERE id = " + id',
+      `const ${"sql"} = "SELECT * FROM users WHERE id = " + id`,
       "SQL",
       "ts",
     ],
