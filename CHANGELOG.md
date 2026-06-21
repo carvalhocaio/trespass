@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.4] - 2026-06-21
+
+### Fixed
+
+- SAST scanner no longer flags its own pattern metadata for `debugger`, `TODO`, `FIXME`, `HACK`, and `secur` keywords — all remaining self-reported false positives eliminated. (`#37cb9fd`)
+
 ## [1.12.3] - 2026-06-21
 
 ### Fixed
