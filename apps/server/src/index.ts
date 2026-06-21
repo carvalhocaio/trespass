@@ -56,6 +56,6 @@ if (process.env.SERVER_STANDALONE === "true") {
   const app = createApp();
   const port = Number(process.env.PORT ?? 3000);
   serve({ fetch: app.fetch, port }, (info) => {
-    console.log(`Server running on http://localhost:${info.port}`);
+    process.stdout.write(`Server running on http://localhost:${info.port}\n`);
   });
 }
