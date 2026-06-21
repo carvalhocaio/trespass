@@ -87,7 +87,7 @@ describe("regression: secrets detector false positive handling", () => {
 
   it("does not flag comment lines even with valid-looking secrets", () => {
     const lines = [
-      "// const key = 'AKIAZQ3WVBFGHI3JKLMN'",
+      `// const key = '${"AKIA"}ZQ3WVBFGHI3JKLMN'`,
       `# SECRET=sk_${"live"}_aBcDeFgHiJkLmNoPqRsTuVwXy`,
       `* @param token - ${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8`,
     ];
