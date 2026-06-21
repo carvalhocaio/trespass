@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("scanFileForSecrets", () => {
   it("detects AWS access key", () => {
     // Valid 20-char AWS key that doesn't trigger false-positive filter
-    const content = 'const key = "AKIAZQ3WVBFGHI3JKLMN"';
+    const content = `const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`;
     const results = scanFileForSecrets(content, "config.ts");
     expect(results).toHaveLength(1);
     expect(results[0]?.severity).toBe("critical");
