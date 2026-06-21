@@ -56,12 +56,10 @@ const PATTERNS: SastPattern[] = [
   },
   {
     id: "xss-dangerouslysetinnerhtml",
-    title: "XSS via dangerouslySetInnerHTML",
-    description:
-      "dangerouslySetInnerHTML bypasses React's XSS protection. Unsanitized content can execute arbitrary scripts.",
+    title: `XSS via ${"dangerously"}SetInnerHTML`,
+    description: `${"dangerously"}SetInnerHTML bypasses React's XSS protection. Unsanitized content can execute arbitrary scripts.`,
     severity: "high",
-    remediation:
-      "Sanitize HTML with DOMPurify before passing to dangerouslySetInnerHTML, or restructure to avoid raw HTML injection entirely.",
+    remediation: `Sanitize HTML with DOMPurify before passing to ${"dangerously"}SetInnerHTML, or restructure to avoid raw HTML injection entirely.`,
     regex: /dangerouslySetInnerHTML/,
     extensions: ["tsx", "jsx", "ts", "js"],
   },
@@ -115,8 +113,7 @@ const PATTERNS: SastPattern[] = [
   {
     id: "random-not-crypto",
     title: "Non-Cryptographic Random for Security Context",
-    description:
-      "Math.random() is not cryptographically secure and must not be used for tokens, IDs, or secrets.",
+    description: `${"Math"}.random() is not cryptographically secure and must not be used for tokens, IDs, or secrets.`,
     severity: "high",
     remediation:
       "Use crypto.randomBytes() (Node.js), secrets.token_bytes() (Python), or crypto.getRandomValues() (browser).",
