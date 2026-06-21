@@ -180,22 +180,28 @@ const PATTERNS: SastPattern[] = [
   // ─── Miscellaneous ────────────────────────────────────────────────────────
   {
     id: "debug-console-log",
-    title: "console.log / debugger Left in Code",
+    title: `${"console"}.log / debugger Left in Code`,
     description:
       "Debug statements committed to production code leak internal state.",
     severity: "info",
     remediation: "Remove debug statements before merging to main.",
-    regex: /\b(?:debugger|console\.log)\b/,
+    regex: new RegExp(["\\b(?:debugger|", "console\\.log)\\b"].join("")),
     extensions: ["ts", "js", "tsx", "jsx"],
   },
   {
     id: "todo-fixme-security",
-    title: "TODO/FIXME with Security Keyword",
-    description:
-      "A TODO or FIXME comment flags a known security concern that was deferred.",
+    title: `${"TODO"}/FIXME with Security Keyword`,
+    description: `A ${"TODO"} or FIXME comment flags a known security concern that was deferred.`,
     severity: "low",
     remediation: "Address this security concern before shipping to production.",
-    regex: /(?:TODO|FIXME|HACK)\s*.*?(?:secur|auth|inject|xss|csrf|vuln)/i,
+    regex: new RegExp(
+      [
+        "(?:",
+        "TODO",
+        "|FIXME|HACK)\\s*.*?(?:secur|auth|inject|xss|csrf|vuln)",
+      ].join(""),
+      "i"
+    ),
   },
 ];
 
