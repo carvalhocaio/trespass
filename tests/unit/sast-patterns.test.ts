@@ -61,7 +61,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects JWT 'none' algorithm acceptance", () => {
-    const content = "verify(token, secret, { algorithms: ['none'] })";
+    const content = `verify(token, secret, { algorithms: ['${"none"}'] })`;
     const results = scanFileForPatterns(content, "auth.ts");
     expect(results.some((r) => r.title.includes("JWT"))).toBe(true);
     expect(results[0]?.severity).toBe("critical");
