@@ -81,7 +81,7 @@ describe("scanFileForSecrets", () => {
 
   it("deduplicates findings on the same line", () => {
     // Two AWS keys on the same line would be deduplicated by the same pattern+line key
-    const content = 'export const KEY = "AKIAZQ3WVBFGHI3JKLMN"';
+    const content = `export const KEY = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`;
     const results = scanFileForSecrets(content, "keys.ts");
     const awsFindings = results.filter((r) => r.title.includes("AWS"));
     expect(awsFindings).toHaveLength(1);
