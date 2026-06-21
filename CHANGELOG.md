@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.5] - 2026-06-21
+
+### Fixed
+
+- Dependency scanner no longer reports false positives for packages using pnpm `catalog:` or `workspace:` version specifiers — those entries are now skipped instead of being sent to OSV.dev with an empty version. (`#66537ed`)
+
 ## [1.12.4] - 2026-06-21
 
 ### Fixed
