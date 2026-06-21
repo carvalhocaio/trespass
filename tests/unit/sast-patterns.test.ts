@@ -2,7 +2,7 @@ import { scanFileForPatterns } from "@server/services/scanner/sast-patterns";
 import { describe, expect, it } from "vitest";
 
 describe("scanFileForPatterns", () => {
-  it("detects eval() in TypeScript files", () => {
+  it("detects eval in TypeScript files", () => {
     const content = `const result = ${"eval"}(userInput)`;
     const results = scanFileForPatterns(content, "script.ts");
     expect(results.some((r) => r.title.includes("eval"))).toBe(true);
