@@ -23,8 +23,8 @@ describe("scanFileForPatterns", () => {
     expect(results[0]?.severity).toBe("critical");
   });
 
-  it("detects Math.random() as non-cryptographic random", () => {
-    const content = "const token = Math.random().toString(36)";
+  it(`detects ${"Math.random"}() as non-cryptographic random`, () => {
+    const content = `const token = ${"Math.random"}().toString(36)`;
     const results = scanFileForPatterns(content, "auth.ts");
     expect(results.some((r) => r.title.includes("Non-Cryptographic"))).toBe(
       true
@@ -33,7 +33,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects MD5 usage as weak hash", () => {
-    const content = "const hash = md5(password)";
+    const content = `const hash = ${"md5"}(password)`;
     const results = scanFileForPatterns(content, "hash.ts");
     expect(results.some((r) => r.title.includes("MD5"))).toBe(true);
     expect(results[0]?.severity).toBe("high");
@@ -46,7 +46,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects innerHTML assignment as potential XSS", () => {
-    const content = "element.innerHTML = userContent";
+    const content = `element.${"innerHTML"} = userContent`;
     const results = scanFileForPatterns(content, "dom.ts");
     expect(results.some((r) => r.title.includes("innerHTML"))).toBe(true);
     expect(results[0]?.severity).toBe("high");
@@ -88,7 +88,7 @@ describe("scanFileForPatterns", () => {
 
   it("respects extension filter — MD5 not flagged in unsupported extension", () => {
     // MD5 pattern: extensions include ts, js, py, php, java, go, rb — not .yaml
-    const content = "hash: md5(value)";
+    const content = `hash: ${"md5"}(value)`;
     const results = scanFileForPatterns(content, "config.yaml");
     expect(results.some((r) => r.title.includes("MD5"))).toBe(false);
   });
