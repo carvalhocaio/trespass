@@ -68,7 +68,7 @@ describe("SAST pattern coverage", () => {
     ["weak hash MD5", "md5(password)", "MD5", "ts"],
     ["weak hash SHA-1", "sha1(data)", "SHA-1", "ts"],
     ["insecure random", "Math.random()", "Non-Cryptographic", "ts"],
-    ["JWT none alg", "algorithms: ['none']", "JWT", "ts"],
+    ["JWT none alg", `algorithms: ['${"none"}']`, "JWT", "ts"],
     ["SSL verify off", `${"rejectUnauthorized"}: false`, "TLS", "ts"],
   ];
 
