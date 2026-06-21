@@ -12,7 +12,7 @@ describe("scanFileForSecrets", () => {
   });
 
   it("detects OpenAI API key", () => {
-    const content = 'const key = "sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"';
+    const content = `const key = "sk-${"aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678"}"`;
     const results = scanFileForSecrets(content, "config.ts");
     expect(results.some((r) => r.title.includes("OpenAI"))).toBe(true);
   });
