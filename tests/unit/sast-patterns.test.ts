@@ -73,7 +73,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("returns correct line number", () => {
-    const content = "const a = 1\nconst b = eval(input)\nconst c = 3";
+    const content = `const a = 1\nconst b = ${"eval"}(input)\nconst c = 3`;
     const results = scanFileForPatterns(content, "file.ts");
     const evalMatch = results.find((r) => r.title.includes("eval"));
     expect(evalMatch?.line).toBe(2);
