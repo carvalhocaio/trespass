@@ -35,10 +35,10 @@ const PATTERNS: SastPattern[] = [
     id: "eval-usage",
     title: "Dangerous eval Usage",
     description:
-      "eval() executes arbitrary code and is a critical injection vector when fed user-controlled input.",
+      "eval executes arbitrary code and is a critical injection vector when fed user-controlled input.",
     severity: "critical",
     remediation:
-      "Remove eval(). Use JSON.parse() for JSON, Function() only with trusted static strings, or restructure logic to avoid dynamic execution.",
+      "Remove eval. Use JSON.parse() for JSON, Function() only with trusted static strings, or restructure logic to avoid dynamic execution.",
     regex: /(?<!["'`])\beval\s*\(/,
     extensions: ["ts", "js", "mjs", "cjs"],
   },
