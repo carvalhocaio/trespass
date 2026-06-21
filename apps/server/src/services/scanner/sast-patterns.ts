@@ -39,7 +39,7 @@ const PATTERNS: SastPattern[] = [
     severity: "critical",
     remediation:
       "Remove eval(). Use JSON.parse() for JSON, Function() only with trusted static strings, or restructure logic to avoid dynamic execution.",
-    regex: /\beval\s*\(/,
+    regex: /(?<!["'`])\beval\s*\(/,
     extensions: ["ts", "js", "mjs", "cjs"],
   },
   {
