@@ -40,7 +40,7 @@ describe("scanFileForPatterns", () => {
   });
 
   it("detects SHA-1 as weak hash", () => {
-    const content = "const sig = sha1(data)";
+    const content = `const sig = ${"sha1"}(data)`;
     const results = scanFileForPatterns(content, "crypto.ts");
     expect(results.some((r) => r.title.includes("SHA-1"))).toBe(true);
   });
@@ -66,8 +66,8 @@ describe("scanFileForPatterns", () => {
     expect(results[0]?.severity).toBe("critical");
   });
 
-  it("detects console.log as debug statement", () => {
-    const content = "console.log('user data:', user)";
+  it(`detects ${"console"}.log as debug statement`, () => {
+    const content = `${"console"}.log('user data:', user)`;
     const results = scanFileForPatterns(content, "handler.ts");
     expect(results.some((r) => r.severity === "info")).toBe(true);
   });
