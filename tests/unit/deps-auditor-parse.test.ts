@@ -62,6 +62,24 @@ describe("parseNpmDeps", () => {
     const deps = parseNpmDeps(content);
     expect(deps).toHaveLength(0);
   });
+
+  it("skips catalog: specifiers (pnpm workspace catalog)", () => {
+    const content = JSON.stringify({
+      dependencies: { zod: "catalog:", express: "^4.18.0" },
+    });
+    const deps = parseNpmDeps(content);
+    expect(deps.find((d) => d.name === "zod")).toBeUndefined();
+    expect(deps.find((d) => d.name === "express")?.version).toBe("4.18.0");
+  });
+
+  it("skips workspace: specifiers (pnpm local packages)", () => {
+    const content = JSON.stringify({
+      dependencies: { "@trespass/db": "workspace:*", lodash: "4.17.21" },
+    });
+    const deps = parseNpmDeps(content);
+    expect(deps.find((d) => d.name === "@trespass/db")).toBeUndefined();
+    expect(deps.find((d) => d.name === "lodash")?.version).toBe("4.17.21");
+  });
 });
 
 describe("parsePythonDeps", () => {
