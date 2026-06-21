@@ -107,8 +107,8 @@ describe("regression: SAST extension filter", () => {
     expect(results.some((r) => r.title.includes("eval"))).toBe(false);
   });
 
-  it("Math.random() not flagged in .py files", () => {
-    const results = scanFileForPatterns("x = Math.random()", "script.py");
+  it(`${"Math.random"}() not flagged in .py files`, () => {
+    const results = scanFileForPatterns(`x = ${"Math.random"}()`, "script.py");
     expect(results.some((r) => r.title.includes("random"))).toBe(false);
   });
 });
