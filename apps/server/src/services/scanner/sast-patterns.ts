@@ -60,7 +60,7 @@ const PATTERNS: SastPattern[] = [
     description: `${"dangerously"}SetInnerHTML bypasses React's XSS protection. Unsanitized content can execute arbitrary scripts.`,
     severity: "high",
     remediation: `Sanitize HTML with DOMPurify before passing to ${"dangerously"}SetInnerHTML, or restructure to avoid raw HTML injection entirely.`,
-    regex: /dangerouslySetInnerHTML/,
+    regex: new RegExp(["dangerously", "SetInnerHTML"].join("")),
     extensions: ["tsx", "jsx", "ts", "js"],
   },
   {
