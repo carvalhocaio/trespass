@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.6] - 2026-06-21
+
+### Improved
+
+- LLM code review phase now runs up to 5 files concurrently, honours scan cancellation mid-phase, and is capped at 3 minutes total — dramatically reducing scan time for large repositories. (`#b354ff0`)
+
 ## [1.12.5] - 2026-06-21
 
 ### Fixed
