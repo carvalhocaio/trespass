@@ -86,7 +86,7 @@ pnpm dev
 | Variable | Description | Required |
 |---|---|---|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `BETTER_AUTH_SECRET` | 32+ character secret for session signing | Yes |
+| `BETTER_AUTH_SECRET` | 32+ character secret for session signing and OAuth token encryption | Yes |
 | `BETTER_AUTH_URL` | Public URL of the API server | Yes |
 | `GITHUB_CLIENT_ID` | GitHub OAuth App client ID | Yes |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret | Yes |
@@ -104,7 +104,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 |---|---|---|
 | `NUXT_PUBLIC_SERVER_URL` | Public URL of the API server | Yes |
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `BETTER_AUTH_SECRET` | 32+ character secret for session signing | Yes |
+| `BETTER_AUTH_SECRET` | 32+ character secret for session signing and OAuth token encryption | Yes |
 | `BETTER_AUTH_URL` | Public URL of the API server | Yes |
 | `CORS_ORIGIN` | Allowed CORS origin (frontend URL) | Yes |
 | `GITHUB_CLIENT_ID` | GitHub OAuth App client ID | Yes |

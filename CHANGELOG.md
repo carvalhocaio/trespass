@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.8] - 2026-06-22
+
+### Security
+
+- OAuth tokens (`access_token`, `refresh_token`, `id_token`) are now encrypted at rest using AES-256-GCM, reducing the impact of a database breach.
+
 ## [1.12.7] - 2026-06-21
 
 ### Fixed
