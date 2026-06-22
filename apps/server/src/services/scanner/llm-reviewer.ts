@@ -145,13 +145,16 @@ async function callGoogle(
   config: LlmConfig,
   userMessage: string
 ): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent`;
 
   const res = await fetchWithTimeout(
     url,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": config.apiKey,
+      },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
         contents: [{ role: "user", parts: [{ text: userMessage }] }],
@@ -191,6 +194,8 @@ function callLlm(config: LlmConfig, userMessage: string): Promise<string> {
 
 /** Max characters per file chunk sent to the LLM */
 const CHUNK_CHARS = 6000;
+/** Max chunks per file — caps LLM calls at ~30 KB per file */
+const MAX_CHUNKS = 5;
 
 /**
  * Sends suspicious file content to the configured LLM for security review.
@@ -205,6 +210,9 @@ export async function reviewFileWithLlm(
   const chunks: string[] = [];
   for (let i = 0; i < content.length; i += CHUNK_CHARS) {
     chunks.push(content.slice(i, i + CHUNK_CHARS));
+    if (chunks.length === MAX_CHUNKS) {
+      break;
+    }
   }
 
   const findings: LlmFinding[] = [];

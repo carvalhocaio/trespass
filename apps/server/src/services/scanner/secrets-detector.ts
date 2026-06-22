@@ -190,6 +190,7 @@ export function scanFileForSecrets(
     }
 
     for (const pattern of PATTERNS) {
+      pattern.regex.lastIndex = 0;
       const matchResult = pattern.regex.exec(line);
       if (!matchResult) {
         continue;
