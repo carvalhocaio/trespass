@@ -235,6 +235,9 @@ async function scanCodeFile(
   };
 }
 
+const LLM_PHASE_TIMEOUT_MS = 180_000; // 3 minutes hard cap
+const LLM_CONCURRENCY = 5;
+
 async function runLlmPhase(
   db: Db,
   llmQueue: { path: string; content: string }[],
@@ -242,23 +245,56 @@ async function runLlmPhase(
   input: ScanInput
 ): Promise<void> {
   const toReview = llmQueue.slice(0, 30);
-  for (const { path, content } of toReview) {
-    const llmFindings = await reviewFileWithLlm(path, content, llmConfig);
-    for (const f of llmFindings) {
-      await insertFinding(db, {
-        scanId: input.scanId,
-        repoId: input.repoId,
-        userId: input.userId,
-        category: "llm",
-        severity: f.severity,
-        title: f.title,
-        description: f.description,
-        file: f.file,
-        line: f.line,
-        snippet: f.snippet,
-        remediation: f.remediation,
-        llmEnriched: true,
-      });
+  const deadline = Date.now() + LLM_PHASE_TIMEOUT_MS;
+  const pending = [...toReview];
+  let aborted = false;
+
+  const workers = Array.from(
+    { length: Math.min(LLM_CONCURRENCY, toReview.length) },
+    async () => {
+      while (pending.length > 0 && !aborted) {
+        if (Date.now() > deadline) {
+          return;
+        }
+        await checkCancelled(db, input.scanId);
+        const item = pending.shift();
+        if (!item) {
+          return;
+        }
+        const llmFindings = await reviewFileWithLlm(
+          item.path,
+          item.content,
+          llmConfig
+        );
+        for (const f of llmFindings) {
+          if (aborted) {
+            return;
+          }
+          await insertFinding(db, {
+            scanId: input.scanId,
+            repoId: input.repoId,
+            userId: input.userId,
+            category: "llm",
+            severity: f.severity,
+            title: f.title,
+            description: f.description,
+            file: f.file,
+            line: f.line,
+            snippet: f.snippet,
+            remediation: f.remediation,
+            llmEnriched: true,
+          });
+        }
+      }
+    }
+  );
+
+  try {
+    await Promise.all(workers);
+  } catch (err) {
+    aborted = true;
+    if (err instanceof ScanCancelledError) {
+      throw err;
     }
   }
 }
