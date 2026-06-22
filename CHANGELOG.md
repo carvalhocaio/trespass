@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.7] - 2026-06-21
+
+### Fixed
+
+- Google Gemini API key is now sent via the `x-goog-api-key` header instead of a URL query parameter, preventing accidental credential exposure in proxy and server logs. (`#a80da33`)
+- LLM file analysis is now capped at 5 chunks (~30 KB) per file, preventing unbounded API calls on very large files. (`#a80da33`)
+- Secrets scanner now resets regex state before each match, guarding against false negatives from stateful regular expressions. (`#a80da33`)
+
 ## [1.12.6] - 2026-06-21
 
 ### Improved
