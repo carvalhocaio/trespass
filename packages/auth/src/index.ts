@@ -58,6 +58,10 @@ export function createAuth() {
         maxAge: 60 * 5,
       },
     },
+    // AES-256-GCM, keyed from BETTER_AUTH_SECRET.
+    account: {
+      encryptOAuthTokens: true,
+    },
   });
 }
 
