@@ -243,11 +243,12 @@ async function runLlmPhase(
   llmQueue: { path: string; content: string }[],
   llmConfig: LlmConfig,
   input: ScanInput
-): Promise<void> {
+): Promise<string | null> {
   const toReview = llmQueue.slice(0, 30);
   const deadline = Date.now() + LLM_PHASE_TIMEOUT_MS;
   const pending = [...toReview];
   let aborted = false;
+  let lastError: string | null = null;
 
   const workers = Array.from(
     { length: Math.min(LLM_CONCURRENCY, toReview.length) },
@@ -261,11 +262,14 @@ async function runLlmPhase(
         if (!item) {
           return;
         }
-        const llmFindings = await reviewFileWithLlm(
+        const { findings: llmFindings, error } = await reviewFileWithLlm(
           item.path,
           item.content,
           llmConfig
         );
+        if (error) {
+          lastError = error;
+        }
         for (const f of llmFindings) {
           if (aborted) {
             return;
@@ -297,6 +301,8 @@ async function runLlmPhase(
       throw err;
     }
   }
+
+  return lastError;
 }
 
 async function phaseDepAudit(
@@ -454,11 +460,13 @@ export async function runScan(input: ScanInput): Promise<void> {
         status: "running",
         detail: null,
       });
-      await runLlmPhase(db, llmQueue, input.llmConfig, input);
+      const llmError = await runLlmPhase(db, llmQueue, input.llmConfig, input);
       llmEnriched = true;
       await updateLastProgress(db, input.scanId, steps, {
-        status: "done",
-        detail: `${Math.min(llmQueue.length, 30)} files reviewed`,
+        status: llmError ? "warn" : "done",
+        detail: llmError
+          ? `LLM review error: ${llmError.slice(0, 120)}`
+          : `${Math.min(llmQueue.length, 30)} files reviewed`,
       });
     }
 
