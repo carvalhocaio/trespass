@@ -171,6 +171,7 @@ export async function getPackageManifests(
 
 export interface DuplicateIssueResult {
   duplicate: boolean;
+  isOpen: boolean | null;
   issueNumber: number | null;
   issueUrl: string | null;
 }
@@ -185,7 +186,7 @@ export async function checkForDuplicateIssue(
     const { data } = await octokit.rest.issues.listForRepo({
       owner,
       repo,
-      state: "open",
+      state: "all",
       per_page: 100,
       page: 1,
     });
@@ -193,12 +194,23 @@ export async function checkForDuplicateIssue(
     if (match) {
       return {
         duplicate: true,
+        isOpen: match.state === "open",
         issueNumber: match.number,
         issueUrl: match.html_url,
       };
     }
-    return { duplicate: false, issueNumber: null, issueUrl: null };
+    return {
+      duplicate: false,
+      isOpen: null,
+      issueNumber: null,
+      issueUrl: null,
+    };
   } catch {
-    return { duplicate: false, issueNumber: null, issueUrl: null };
+    return {
+      duplicate: false,
+      isOpen: null,
+      issueNumber: null,
+      issueUrl: null,
+    };
   }
 }
