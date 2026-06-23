@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-06-23
+
+### Added
+
+- Before opening a GitHub issue from a finding, the scanner now checks if an open issue with the same title already exists in the target repo. If a duplicate is found, the button is replaced with a link to the existing issue and an "Open new anyway" option. (`#b0804d2`)
+
 ## [1.12.9] - 2026-06-22
 
 ### Security
