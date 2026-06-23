@@ -183,14 +183,15 @@ export async function checkForDuplicateIssue(
   title: string
 ): Promise<DuplicateIssueResult> {
   try {
-    const { data } = await octokit.rest.issues.listForRepo({
-      owner,
-      repo,
-      state: "all",
-      per_page: 100,
-      page: 1,
+    // Use Search API with is:issue to exclude PRs. listForRepo returns issues
+    // and PRs mixed, so with many PRs the first page misses old issues.
+    const { data } = await octokit.rest.search.issuesAndPullRequests({
+      q: `repo:${owner}/${repo} is:issue "${title}"`,
+      per_page: 10,
+      sort: "created",
+      order: "desc",
     });
-    const match = data.find((issue) => issue.title === title);
+    const match = data.items.find((issue) => issue.title === title);
     if (match) {
       return {
         duplicate: true,
