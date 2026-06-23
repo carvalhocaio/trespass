@@ -249,8 +249,8 @@ export async function reviewFileWithLlm(
       .slice(0, chunkIdx * CHUNK_CHARS)
       .split("\n").length;
 
-    const safeChunk = chunk.replaceAll(
-      "</untrusted_code>",
+    const safeChunk = chunk.replace(
+      /<\/untrusted_code>/gi,
       "<\\/untrusted_code>"
     );
     const userMessage = [
