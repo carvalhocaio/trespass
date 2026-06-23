@@ -114,8 +114,9 @@ async function callOpenAI(
   );
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${err}`);
+    const body = await res.text();
+    console.error(`[llm-reviewer] OpenAI API error ${res.status}:`, body);
+    throw new Error(`OpenAI API error (HTTP ${res.status})`);
   }
 
   const data = (await res.json()) as {
@@ -148,8 +149,9 @@ async function callAnthropic(
   );
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Anthropic API error ${res.status}: ${err}`);
+    const body = await res.text();
+    console.error(`[llm-reviewer] Anthropic API error ${res.status}:`, body);
+    throw new Error(`Anthropic API error (HTTP ${res.status})`);
   }
 
   const data = (await res.json()) as {
@@ -187,8 +189,12 @@ async function callGoogle(
   );
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Google Gemini API error ${res.status}: ${err}`);
+    const body = await res.text();
+    console.error(
+      `[llm-reviewer] Google Gemini API error ${res.status}:`,
+      body
+    );
+    throw new Error(`Google Gemini API error (HTTP ${res.status})`);
   }
 
   const data = (await res.json()) as {
