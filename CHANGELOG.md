@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-06-23
+
+### Added
+
+- The duplicate issue check now also detects **closed** GitHub issues. When a closed issue with the same title is found, a distinct muted notice "Issue #N was closed" is shown — with a link to the closed issue and an "Open new anyway" option — preventing accidental duplicates when findings are acknowledged as by-design. (`#5769786`)
+
+### Security
+
+- LLM provider errors from OpenAI, Anthropic, and Google are now sanitized before reaching the UI. Only the HTTP status code is surfaced (e.g. "OpenAI API error (HTTP 401)"); the full response body — which may contain API account details or internal metadata — is logged server-side only. (`#5769786`)
+
 ## [1.13.0] - 2026-06-23
 
 ### Added

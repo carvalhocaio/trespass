@@ -25,7 +25,7 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 - Scan duration timer updates every second during active scans instead of jumping at each polling interval
 - LLM review phase runs up to 5 files concurrently and is capped at 3 minutes total — scans complete quickly even on large repositories
 - LLM review is opt-in per scan — when an LLM is configured, a dialog asks "No, skip" or "Yes, include" before each scan; without LLM configured, scans start immediately
-- Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation; checks for an existing open issue with the same title and shows a link instead of opening a duplicate
+- Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation; checks for existing issues (open or closed) — open issues show a yellow warning, closed issues show a muted notice — preventing accidental duplicates
 - LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers
 - Secrets inside commented-out code are detected and flagged with an `inComment` marker — not suppressed
 - LLM review errors are surfaced in the scan progress panel as a warning step instead of being silently discarded
