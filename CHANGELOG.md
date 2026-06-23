@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-06-23
+
+### Fixed
+
+- Duplicate issue detection now correctly finds older issues. The previous implementation used `listForRepo` which mixes issues and pull requests; with many PRs the first page skipped issues older than the 100 most recent items. Switched to the GitHub Search API with `is:issue` to search across the full issue history. (`#43768b6`)
+
 ## [1.14.0] - 2026-06-23
 
 ### Added
