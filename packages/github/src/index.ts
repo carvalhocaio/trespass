@@ -168,3 +168,37 @@ export async function getPackageManifests(
 
   return manifests;
 }
+
+export interface DuplicateIssueResult {
+  duplicate: boolean;
+  issueNumber: number | null;
+  issueUrl: string | null;
+}
+
+export async function checkForDuplicateIssue(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  title: string
+): Promise<DuplicateIssueResult> {
+  try {
+    const { data } = await octokit.rest.issues.listForRepo({
+      owner,
+      repo,
+      state: "open",
+      per_page: 100,
+      page: 1,
+    });
+    const match = data.find((issue) => issue.title === title);
+    if (match) {
+      return {
+        duplicate: true,
+        issueNumber: match.number,
+        issueUrl: match.html_url,
+      };
+    }
+    return { duplicate: false, issueNumber: null, issueUrl: null };
+  } catch {
+    return { duplicate: false, issueNumber: null, issueUrl: null };
+  }
+}

@@ -6,6 +6,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { requireAuth } from "./middleware/auth";
+import { issuesRoute } from "./routes/issues";
 import { reposRoute } from "./routes/repos";
 import { scansRoute } from "./routes/scans";
 import { secretsRoute } from "./routes/secrets";
@@ -34,6 +35,7 @@ export function createApp() {
   api.route("/me/secrets", secretsRoute);
   api.route("/repos", reposRoute);
   api.route("/scans", scansRoute);
+  api.route("/github", issuesRoute);
 
   app.route("/api", api);
 
