@@ -85,7 +85,7 @@ describe("regression: secrets detector false positive handling", () => {
     expect(scanFileForSecrets(content, "config.ts")).toHaveLength(0);
   });
 
-  it("does not flag comment lines even with valid-looking secrets", () => {
+  it("flags secrets in comment lines and marks them inComment", () => {
     const lines = [
       `// const key = '${"AKIA"}ZQ3WVBFGHI3JKLMN'`,
       `# SECRET=sk_${"live"}_aBcDeFgHiJkLmNoPqRsTuVwXy`,
@@ -93,7 +93,8 @@ describe("regression: secrets detector false positive handling", () => {
     ];
     for (const line of lines) {
       const results = scanFileForSecrets(line, "config.ts");
-      expect(results, `Should not flag: ${line}`).toHaveLength(0);
+      expect(results.length, `Should flag: ${line}`).toBeGreaterThan(0);
+      expect(results.every((r) => r.inComment)).toBe(true);
     }
   });
 });

@@ -1,5 +1,6 @@
 export interface SecretMatch {
   description: string;
+  inComment: boolean;
   line: number;
   remediation: string;
   severity: "critical" | "high" | "medium" | "low";
@@ -164,6 +165,18 @@ function isFalsePositive(match: string): boolean {
   return IGNORE_PATTERNS.some((p) => p.test(match));
 }
 
+/** Lines longer than this are skipped to avoid regex ReDoS on huge lines. */
+const MAX_LINE_LENGTH = 2000;
+
+function isCommentLine(line: string): boolean {
+  const trimmed = line.trimStart();
+  return (
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("*")
+  );
+}
+
 /**
  * Scans a single file's content for hardcoded secrets.
  * Returns one finding per matched line (deduped by pattern+line).
@@ -179,15 +192,11 @@ export function scanFileForSecrets(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
 
-    // Skip comments and common false-positive lines
-    const trimmed = line.trimStart();
-    if (
-      trimmed.startsWith("//") ||
-      trimmed.startsWith("#") ||
-      trimmed.startsWith("*")
-    ) {
+    if (line.length > MAX_LINE_LENGTH) {
       continue;
     }
+
+    const inComment = isCommentLine(line);
 
     for (const pattern of PATTERNS) {
       pattern.regex.lastIndex = 0;
@@ -210,6 +219,7 @@ export function scanFileForSecrets(
       matches.push({
         title: `${pattern.name} exposed in ${filePath}`,
         description: pattern.description,
+        inComment,
         severity: pattern.severity,
         line: i + 1,
         snippet: line.trim().slice(0, 200),
