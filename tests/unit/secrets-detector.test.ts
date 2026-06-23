@@ -71,9 +71,17 @@ describe("scanFileForSecrets", () => {
     expect(results[0]?.inComment).toBe(false);
   });
 
-  it("skips lines longer than the maximum length", () => {
+  it("detects a secret at the start of a long line", () => {
     const padding = "x".repeat(2001);
-    const content = `${padding} AKIAZQ3WVBFGHI3JKLMN`;
+    const content = `${"AKIA"}ZQ3WVBFGHI3JKLMN ${padding}`;
+    const results = scanFileForSecrets(content, "config.ts");
+    expect(results).toHaveLength(1);
+    expect(results[0]?.title).toContain("AWS Access Key");
+  });
+
+  it("does not detect a secret hidden past the truncation boundary", () => {
+    const padding = "x".repeat(2001);
+    const content = `${padding} ${"AKIA"}ZQ3WVBFGHI3JKLMN`;
     const results = scanFileForSecrets(content, "config.ts");
     expect(results).toHaveLength(0);
   });
