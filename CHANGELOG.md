@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.9] - 2026-06-22
+
+### Security
+
+- Secrets inside commented-out lines (`//`, `#`, `*`) are now detected and tagged with `inComment` instead of being silently skipped. (`#5885e0c`)
+- LLM code reviewer wraps untrusted file content in XML delimiters with a guard instruction to prevent prompt injection. (`#5885e0c`)
+- LLM provider model names are validated against a safe-character pattern before URL construction to block path traversal injection. (`#5885e0c`)
+- LLM provider errors are now surfaced to the scan progress UI as a sanitized warning instead of being silently discarded. (`#5885e0c`)
+- Long source lines (>2000 chars) are truncated before regex scanning instead of skipped entirely, closing a trivial secret-detection bypass. (`#491dc54`)
+- The `</untrusted_code>` prompt delimiter is now escaped case-insensitively, blocking casing variants that could escape the prompt sandbox. (`#491dc54`)
+
 ## [1.12.8] - 2026-06-22
 
 ### Security

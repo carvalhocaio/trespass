@@ -4,7 +4,7 @@
 
 Trespass connects to your GitHub account, downloads repository content via the GitHub API, and runs four analysis layers:
 
-1. **Secrets detection** — regex + entropy patterns for API keys, tokens, PEM keys, and common credential prefixes
+1. **Secrets detection** — regex + entropy patterns for API keys, tokens, PEM keys, and common credential prefixes, including secrets found inside code comments
 2. **Dependency auditing** — queries [OSV.dev](https://osv.dev) for known CVEs in `package.json` and `requirements.txt`
 3. **SAST patterns** — SQL injection, `eval()`, command injection, XSS vectors, weak cryptography, and LLM prompt injection patterns
 4. **LLM review** _(optional)_ — sends flagged code snippets to your own model (OpenAI, Anthropic, or Google) for enriched findings and remediation advice
@@ -27,6 +27,8 @@ Findings are persisted per scan and exposed through a dark-themed UI with per-se
 - LLM review is opt-in per scan — when an LLM is configured, a dialog asks "No, skip" or "Yes, include" before each scan; without LLM configured, scans start immediately
 - Open GitHub Issue directly from any finding — pre-fills title, severity, snippet, and remediation
 - LLM review degrades gracefully: if no API key is configured, the scan still runs the three static layers
+- Secrets inside commented-out code are detected and flagged with an `inComment` marker — not suppressed
+- LLM review errors are surfaced in the scan progress panel as a warning step instead of being silently discarded
 - Semantic versioning badge in the UI footer
 
 ## Tech stack
