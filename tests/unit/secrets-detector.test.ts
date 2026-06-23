@@ -50,15 +50,31 @@ describe("scanFileForSecrets", () => {
     expect(results).toHaveLength(0);
   });
 
-  it("skips comment lines starting with //", () => {
-    const content = `// const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"\n// token = "${"ghp_"}A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8"`;
+  it("detects secrets inside // comment lines and flags inComment", () => {
+    const content = `// const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`;
     const results = scanFileForSecrets(content, "config.ts");
-    expect(results).toHaveLength(0);
+    expect(results.some((r) => r.title.includes("AWS Access Key"))).toBe(true);
+    expect(results.every((r) => r.inComment)).toBe(true);
   });
 
-  it("skips comment lines starting with #", () => {
+  it("detects secrets inside # comment lines and flags inComment", () => {
     const content = `# STRIPE_KEY=sk_${"live"}_aBcDeFgHiJkLmNoPqRsTuVwXy`;
     const results = scanFileForSecrets(content, ".env");
+    expect(results.some((r) => r.title.includes("Stripe"))).toBe(true);
+    expect(results.every((r) => r.inComment)).toBe(true);
+  });
+
+  it("flags non-comment secrets with inComment false", () => {
+    const content = `const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`;
+    const results = scanFileForSecrets(content, "config.ts");
+    expect(results).toHaveLength(1);
+    expect(results[0]?.inComment).toBe(false);
+  });
+
+  it("skips lines longer than the maximum length", () => {
+    const padding = "x".repeat(2001);
+    const content = `${padding} AKIAZQ3WVBFGHI3JKLMN`;
+    const results = scanFileForSecrets(content, "config.ts");
     expect(results).toHaveLength(0);
   });
 
