@@ -163,6 +163,7 @@ const rescanDialogOpen = ref(false);
 
 interface IssueCheckResult {
   duplicate: boolean;
+  isOpen: boolean | null;
   issueNumber: number | null;
   issueUrl: string | null;
 }
@@ -737,7 +738,10 @@ function elapsed(
                   </div>
 
                   <div
-                    v-else-if="issueCheckResult[f.id]?.duplicate"
+                    v-else-if="
+                      issueCheckResult[f.id]?.duplicate &&
+                      issueCheckResult[f.id]?.isOpen
+                    "
                     class="space-y-2 rounded-lg border border-yellow-400/30 bg-yellow-400/5 p-3"
                   >
                     <p
@@ -761,6 +765,49 @@ function elapsed(
                         >
                           <ExternalLink class="h-3.5 w-3.5" />
                           View #{{ issueCheckResult[f.id]?.issueNumber }}
+                        </a>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        class="flex-1 gap-1.5 font-mono text-xs text-muted-foreground"
+                        @click.stop="openIssueAnyway(f)"
+                      >
+                        <Github class="h-3.5 w-3.5" />
+                        Open new anyway
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div
+                    v-else-if="
+                      issueCheckResult[f.id]?.duplicate &&
+                      !issueCheckResult[f.id]?.isOpen
+                    "
+                    class="space-y-2 rounded-lg border border-border/30 bg-muted/5 p-3"
+                  >
+                    <p
+                      class="flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
+                    >
+                      <AlertCircle class="h-3.5 w-3.5 shrink-0" />
+                      Issue #{{ issueCheckResult[f.id]?.issueNumber }}
+                      was closed
+                    </p>
+                    <div class="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        class="flex-1 gap-1.5 font-mono text-xs text-muted-foreground"
+                        as-child
+                      >
+                        <a
+                          :href="issueCheckResult[f.id]?.issueUrl ?? '#'"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink class="h-3.5 w-3.5" />
+                          View #{{ issueCheckResult[f.id]?.issueNumber }}
+                          (closed)
                         </a>
                       </Button>
                       <Button

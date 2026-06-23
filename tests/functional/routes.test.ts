@@ -84,7 +84,7 @@ describe("functional: authenticated routes", () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ duplicate: false });
+    expect(body).toMatchObject({ duplicate: false, isOpen: null });
   });
 
   it("GET /api/github/:owner/:repo/issues/check returns 400 when title is missing", async () => {

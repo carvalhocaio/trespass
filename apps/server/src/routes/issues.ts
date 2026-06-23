@@ -33,7 +33,12 @@ export const issuesRoute = new Hono<AppEnv>().get(
       .limit(1);
 
     if (!secret?.githubPatEnc) {
-      return c.json({ duplicate: false, issueNumber: null, issueUrl: null });
+      return c.json({
+        duplicate: false,
+        isOpen: null,
+        issueNumber: null,
+        issueUrl: null,
+      });
     }
 
     const pat = crypto.decrypt(secret.githubPatEnc);
