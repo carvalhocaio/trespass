@@ -78,6 +78,20 @@ describe("functional: authenticated routes", () => {
     expect(res.status).toBe(200);
   });
 
+  it("GET /api/github/:owner/:repo/issues/check returns 200 with valid session", async () => {
+    const res = await app.request(
+      "/api/github/owner/repo/issues/check?title=%5BSecurity%5D+Test"
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ duplicate: false });
+  });
+
+  it("GET /api/github/:owner/:repo/issues/check returns 400 when title is missing", async () => {
+    const res = await app.request("/api/github/owner/repo/issues/check");
+    expect(res.status).toBe(400);
+  });
+
   it("GET / health check returns 200", async () => {
     const res = await app.request("/");
     expect(res.status).toBe(200);

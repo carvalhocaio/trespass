@@ -23,6 +23,10 @@ describe("smoke: route registration (static)", () => {
     expect(indexSrc).toContain('api.route("/scans"');
   });
 
+  it("registers /github route", () => {
+    expect(indexSrc).toContain('api.route("/github"');
+  });
+
   it("applies requireAuth middleware to all API routes", () => {
     expect(indexSrc).toContain("requireAuth");
   });

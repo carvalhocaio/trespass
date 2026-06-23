@@ -45,6 +45,13 @@ describe("route authentication", () => {
     expect(res.status).toBe(401);
   });
 
+  it("GET /api/github/owner/repo/issues/check returns 401 without a session", async () => {
+    const res = await app.request(
+      "/api/github/owner/repo/issues/check?title=test"
+    );
+    expect(res.status).toBe(401);
+  });
+
   it("GET / returns 200 (health check, no auth required)", async () => {
     const res = await app.request("/");
     expect(res.status).toBe(200);
