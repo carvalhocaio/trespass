@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-06-24
+
+### Removed
+
+- GitHub issue state check removed from the scan results page. The "Open GitHub
+  Issue" button now opens the GitHub new-issue form directly, without querying
+  for existing open or closed issues. Issue tracking responsibility belongs to
+  GitHub, not the scanner.
+
 ## [1.15.0] - 2026-06-24
 
 ### Fixed
