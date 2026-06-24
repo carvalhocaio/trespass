@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  AlertCircle,
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
@@ -161,15 +160,6 @@ const hasLlm = ref(false);
 const llmModel = ref<string | null>(null);
 const rescanDialogOpen = ref(false);
 
-interface IssueCheckResult {
-  duplicate: boolean;
-  isOpen: boolean | null;
-  issueNumber: number | null;
-  issueUrl: string | null;
-}
-const issueCheckLoading = ref<Record<string, boolean>>({});
-const issueCheckResult = ref<Record<string, IssueCheckResult>>({});
-
 async function stopScan() {
   if (!scan.value) {
     return;
@@ -255,49 +245,12 @@ function proceedToGitHub(f: Finding, repo: string, title: string) {
   window.open(buildIssueUrl(f, repo, title), "_blank", "noopener,noreferrer");
 }
 
-async function openIssue(f: Finding) {
+function openIssue(f: Finding) {
   const repo = scan.value?.repo.fullName;
   if (!repo) {
     return;
   }
-
-  const title = `[Security] ${f.title}`;
-
-  if (issueCheckResult.value[f.id]?.duplicate) {
-    return;
-  }
-
-  issueCheckLoading.value = { ...issueCheckLoading.value, [f.id]: true };
-
-  try {
-    const [owner, repoName] = repo.split("/") as [string, string];
-    const result = await $fetch<IssueCheckResult>(
-      `/api/github/${owner}/${repoName}/issues/check`,
-      { credentials: "include", query: { title } }
-    );
-    issueCheckResult.value = { ...issueCheckResult.value, [f.id]: result };
-    if (!result.duplicate) {
-      proceedToGitHub(f, repo, title);
-    }
-  } catch {
-    proceedToGitHub(f, repo, title);
-  } finally {
-    const next = { ...issueCheckLoading.value };
-    delete next[f.id];
-    issueCheckLoading.value = next;
-  }
-}
-
-function openIssueAnyway(f: Finding) {
-  const repo = scan.value?.repo.fullName;
-  if (!repo) {
-    return;
-  }
-  const title = `[Security] ${f.title}`;
-  const next = { ...issueCheckResult.value };
-  delete next[f.id];
-  issueCheckResult.value = next;
-  proceedToGitHub(f, repo, title);
+  proceedToGitHub(f, repo, `[Security] ${f.title}`);
 }
 
 const severityOrder: Severity[] = ["critical", "high", "medium", "low", "info"];
@@ -729,101 +682,7 @@ function elapsed(
                     </p>
                   </div>
 
-                  <div
-                    v-if="issueCheckLoading[f.id]"
-                    class="flex items-center gap-2 font-mono text-xs text-muted-foreground"
-                  >
-                    <Loader2 class="h-3.5 w-3.5 animate-spin" />
-                    Checking for existing issues...
-                  </div>
-
-                  <div
-                    v-else-if="
-                      issueCheckResult[f.id]?.duplicate &&
-                      issueCheckResult[f.id]?.isOpen
-                    "
-                    class="space-y-2 rounded-lg border border-yellow-400/30 bg-yellow-400/5 p-3"
-                  >
-                    <p
-                      class="flex items-center gap-1.5 font-mono text-xs text-yellow-400"
-                    >
-                      <AlertCircle class="h-3.5 w-3.5 shrink-0" />
-                      Issue #{{ issueCheckResult[f.id]?.issueNumber }}
-                      already exists
-                    </p>
-                    <div class="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 gap-1.5 font-mono text-xs"
-                        as-child
-                      >
-                        <a
-                          :href="issueCheckResult[f.id]?.issueUrl ?? '#'"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink class="h-3.5 w-3.5" />
-                          View #{{ issueCheckResult[f.id]?.issueNumber }}
-                        </a>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        class="flex-1 gap-1.5 font-mono text-xs text-muted-foreground"
-                        @click.stop="openIssueAnyway(f)"
-                      >
-                        <Github class="h-3.5 w-3.5" />
-                        Open new anyway
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else-if="
-                      issueCheckResult[f.id]?.duplicate &&
-                      !issueCheckResult[f.id]?.isOpen
-                    "
-                    class="space-y-2 rounded-lg border border-border/30 bg-muted/5 p-3"
-                  >
-                    <p
-                      class="flex items-center gap-1.5 font-mono text-xs text-muted-foreground"
-                    >
-                      <AlertCircle class="h-3.5 w-3.5 shrink-0" />
-                      Issue #{{ issueCheckResult[f.id]?.issueNumber }}
-                      was closed
-                    </p>
-                    <div class="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        class="flex-1 gap-1.5 font-mono text-xs text-muted-foreground"
-                        as-child
-                      >
-                        <a
-                          :href="issueCheckResult[f.id]?.issueUrl ?? '#'"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink class="h-3.5 w-3.5" />
-                          View #{{ issueCheckResult[f.id]?.issueNumber }}
-                          (closed)
-                        </a>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        class="flex-1 gap-1.5 font-mono text-xs text-muted-foreground"
-                        @click.stop="openIssueAnyway(f)"
-                      >
-                        <Github class="h-3.5 w-3.5" />
-                        Open new anyway
-                      </Button>
-                    </div>
-                  </div>
-
                   <Button
-                    v-else
                     variant="outline"
                     size="sm"
                     class="w-full gap-2 font-mono text-xs border-border/50 text-muted-foreground hover:text-foreground"
