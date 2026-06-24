@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-06-24
+
+### Fixed
+
+- SAST SQL injection pattern no longer produces false positives on HTTP query
+  parameter reads (e.g. Hono's `c.req.query("title")`). The regex now requires
+  a SQL keyword (`SELECT`, `INSERT`, `UPDATE`, etc.) at the start of the matched
+  string, making detection language-agnostic and accurate for Python, Go, Rust,
+  Java, and TypeScript.
+- `Fetching file tree…` progress step correctly shows a `running` state during
+  the fetch, restoring the real-time scan indicator that was lost when the tree
+  fetch was moved to the scan orchestration layer.
+
+### Improved
+
+- Dependency manifest scanner now pre-filters candidate files against the
+  repository's known file tree before fetching, eliminating unnecessary GitHub
+  API 404 requests for manifests absent from the repo (e.g. `go.mod`,
+  `Cargo.toml`, `composer.json` in Node.js-only repositories).
+- File tree is now fetched once per scan and shared between the deps-audit and
+  code-scan phases, reducing total GitHub API calls by one tree request.
+
 ## [1.14.1] - 2026-06-23
 
 ### Fixed
