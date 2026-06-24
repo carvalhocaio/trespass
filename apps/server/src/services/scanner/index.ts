@@ -1,5 +1,6 @@
 import { createDb } from "@trespass/db";
 import { finding, scan } from "@trespass/db/schema/app";
+import type { TreeEntry } from "@trespass/github";
 import {
   createOctokit,
   getFileContent,
@@ -309,7 +310,8 @@ async function phaseDepAudit(
   db: Db,
   octokit: ReturnType<typeof createOctokit>,
   input: ScanInput,
-  steps: ProgressStep[]
+  steps: ProgressStep[],
+  knownPaths: Set<string>
 ): Promise<ProgressStep[]> {
   let s = await pushProgress(db, input.scanId, steps, {
     key: "audit_deps",
@@ -320,7 +322,8 @@ async function phaseDepAudit(
   const manifests = await getPackageManifests(
     octokit,
     input.owner,
-    input.repoName
+    input.repoName,
+    knownPaths
   );
   const totalPackages = countManifestPackages(manifests);
   const depsVulns = await auditDependencies(manifests);
@@ -361,27 +364,22 @@ async function phaseCodeScan(
   db: Db,
   octokit: ReturnType<typeof createOctokit>,
   input: ScanInput,
-  steps: ProgressStep[]
+  steps: ProgressStep[],
+  tree: TreeEntry[]
 ): Promise<{
   filesScanned: number;
   llmQueue: { path: string; content: string }[];
   steps: ProgressStep[];
 }> {
+  const scannableFiles = tree.filter(
+    (e) => e.type === "blob" && shouldScan(e.path)
+  );
   let s = await pushProgress(db, input.scanId, steps, {
     key: "fetch_tree",
     label: "Fetching file tree...",
     status: "running",
     detail: null,
   });
-  const tree = await getFileTree(
-    octokit,
-    input.owner,
-    input.repoName,
-    input.defaultBranch
-  );
-  const scannableFiles = tree.filter(
-    (e) => e.type === "blob" && shouldScan(e.path)
-  );
   s = await updateLastProgress(db, input.scanId, s, {
     status: "done",
     detail: `${tree.length} files · ${scannableFiles.length} scannable`,
@@ -441,14 +439,22 @@ export async function runScan(input: ScanInput): Promise<void> {
   try {
     const octokit = createOctokit(input.pat);
 
-    let steps = await phaseDepAudit(db, octokit, input, []);
+    const tree = await getFileTree(
+      octokit,
+      input.owner,
+      input.repoName,
+      input.defaultBranch
+    );
+    const knownPaths = new Set(tree.map((e) => e.path));
+
+    let steps = await phaseDepAudit(db, octokit, input, [], knownPaths);
     await checkCancelled(db, input.scanId);
 
     const {
       steps: steps2,
       filesScanned,
       llmQueue,
-    } = await phaseCodeScan(db, octokit, input, steps);
+    } = await phaseCodeScan(db, octokit, input, steps, tree);
     steps = steps2;
     await checkCancelled(db, input.scanId);
 

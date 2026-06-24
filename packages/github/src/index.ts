@@ -145,12 +145,13 @@ const MANIFEST_PATHS: Record<PackageManifest["type"], string[]> = {
 
 /**
  * Fetches all dependency manifest files present in the repository root.
- * Used by the dependency vulnerability scanner.
+ * Pass `knownPaths` (from getFileTree) to skip 404s for absent manifests.
  */
 export async function getPackageManifests(
   octokit: Octokit,
   owner: string,
-  repo: string
+  repo: string,
+  knownPaths?: Set<string>
 ): Promise<PackageManifest[]> {
   const manifests: PackageManifest[] = [];
 
@@ -159,6 +160,9 @@ export async function getPackageManifests(
     string[],
   ][]) {
     for (const path of paths) {
+      if (knownPaths && !knownPaths.has(path)) {
+        continue;
+      }
       const content = await getFileContent(octokit, owner, repo, path);
       if (content !== null) {
         manifests.push({ type, path, content });

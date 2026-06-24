@@ -28,7 +28,8 @@ const PATTERNS: SastPattern[] = [
     severity: "critical",
     remediation:
       "Use parameterized queries or an ORM (e.g., Drizzle, Prisma, SQLAlchemy). Never interpolate user input directly into SQL strings.",
-    regex: /(?:query|sql|execute|exec)\s*[=(]\s*[`'"]/i,
+    regex:
+      /(?:query|sql|execute|exec)\s*[=(]\s*[`'"](?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|EXEC|CALL|MERGE)\b/i,
     extensions: ["ts", "js", "py", "php", "java", "go", "rb"],
   },
   {
