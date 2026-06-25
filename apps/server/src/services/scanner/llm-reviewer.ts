@@ -277,10 +277,12 @@ export async function reviewFileWithLlm(
       .slice(0, chunkIdx * CHUNK_CHARS)
       .split("\n").length;
 
-    const safeChunk = chunk.replace(
-      /<\/untrusted_code>/gi,
-      "<\\/untrusted_code>"
-    );
+    // HTML-encode all angle brackets so untrusted code can never close the
+    // <untrusted_code> delimiter, regardless of how the LLM tokenizes escapes.
+    const safeChunk = chunk
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
     const userMessage = [
       `File: ${filePath}`,
       `Lines: ${lineOffset}–${lineOffset + chunk.split("\n").length}`,
