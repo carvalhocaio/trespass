@@ -118,7 +118,10 @@ async function callOpenAI(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(`[llm-reviewer] OpenAI API error ${res.status}:`, body);
+    console.error(
+      `[llm-reviewer] OpenAI API error ${res.status}:`,
+      body.slice(0, 200)
+    );
     throw new Error(`OpenAI API error (HTTP ${res.status})`);
   }
 
@@ -153,7 +156,10 @@ async function callAnthropic(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(`[llm-reviewer] Anthropic API error ${res.status}:`, body);
+    console.error(
+      `[llm-reviewer] Anthropic API error ${res.status}:`,
+      body.slice(0, 200)
+    );
     throw new Error(`Anthropic API error (HTTP ${res.status})`);
   }
 
@@ -195,7 +201,7 @@ async function callGoogle(
     const body = await res.text();
     console.error(
       `[llm-reviewer] Google Gemini API error ${res.status}:`,
-      body
+      body.slice(0, 200)
     );
     throw new Error(`Google Gemini API error (HTTP ${res.status})`);
   }

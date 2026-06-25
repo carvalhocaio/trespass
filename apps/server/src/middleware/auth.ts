@@ -12,7 +12,9 @@ export async function requireAuth(
   c: Context<AppEnv>,
   next: Next
 ): Promise<void> {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const session = await auth.api
+    .getSession({ headers: c.req.raw.headers })
+    .catch(() => null);
 
   if (!session?.user) {
     throw new HTTPException(401, { message: "Unauthorized" });
