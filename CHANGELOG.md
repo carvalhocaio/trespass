@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.5] - 2026-06-25
+
+### Security
+
+- LLM code reviewer now HTML-encodes untrusted code chunks (`<` → `&lt;`,
+  `>` → `&gt;`, `&` → `&amp;`) before wrapping them in the
+  `<untrusted_code>` prompt delimiter, preventing untrusted content from
+  ever closing the delimiter regardless of how the model tokenizes escape
+  sequences.
+
 ## [1.15.4] - 2026-06-25
 
 ### Security
