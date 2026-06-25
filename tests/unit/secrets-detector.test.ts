@@ -79,7 +79,7 @@ describe("scanFileForSecrets", () => {
     expect(results[0]?.title).toContain("AWS Access Key");
   });
 
-  it("detects a secret hidden past the old 2000-char truncation boundary", () => {
+  it("detects a secret within the 10 000-char scan window", () => {
     const padding = "x".repeat(2001);
     const content = `${padding} ${"AKIA"}ZQ3WVBFGHI3JKLMN`;
     const results = scanFileForSecrets(content, "config.ts");
