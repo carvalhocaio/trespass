@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.7] - 2026-06-25
+
+### Improved
+
+- LLM reviewer now requires all four reporting criteria to be met before flagging a
+  finding: the vulnerability must be directly visible in the reviewed file, a concrete
+  fix must be possible within that file, confidence must exceed 80%, and the code must
+  be production source (not a test fixture). This eliminates speculative and
+  architecture-level false positives.
+- `info` severity level removed from the LLM response schema; findings that do not reach
+  the `low` bar are discarded, reducing noise in scan results.
+- Test files (paths matching `tests/`, `__tests__/`, or `spec/`) are now annotated as
+  such in the review context so the LLM does not flag intentional test fixtures as real
+  vulnerabilities.
+
 ## [1.15.6] - 2026-06-25
 
 ### Security
