@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-06-25
+
+### Fixed
+
+- Route middleware now validates the session during server-side rendering
+  instead of skipping authentication on SSR requests, closing an
+  authentication bypass on protected pages. (#26716fc)
+- LLM code reviewer no longer crashes with "Unexpected token" when the
+  model wraps its response in markdown code fences or uses `...` as a
+  placeholder — the JSON object is extracted before parsing. (#528db9e)
+
 ## [1.15.1] - 2026-06-24
 
 ### Removed
