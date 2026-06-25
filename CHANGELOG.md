@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.6] - 2026-06-25
+
+### Security
+
+- LLM code reviewer system prompt now includes an explicit prompt injection
+  defence block, instructing the model to treat the entire
+  `<untrusted_code>` section as pure data and ignore any embedded
+  directives, role-change attempts, or fake system messages.
+- Guard instruction in the user message is now placed **before** the
+  untrusted code block, with a second reinforcement after it — ensuring
+  the model receives the constraint before processing any attacker-
+  controlled content.
+- System prompt now explicitly declares language-agnostic analysis,
+  preventing the model from applying assumptions tied to a specific stack.
+
 ## [1.15.5] - 2026-06-25
 
 ### Security
