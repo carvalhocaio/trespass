@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.3] - 2026-06-25
+
+### Security
+
+- Secrets scanner now scans the full line length instead of truncating at
+  2000 characters — secrets placed after the truncation boundary are now
+  detected. (#e7efa1e)
+- LLM provider error response bodies are truncated to 200 characters
+  before logging, preventing potential exposure of sensitive API metadata
+  in server logs. (#e7efa1e)
+- Session cookie `sameSite` changed from `none` to `lax` — cookies are
+  no longer sent on cross-site requests since the frontend and API share
+  the same origin. (#e7efa1e)
+- Auth middleware now handles database and network failures during session
+  retrieval gracefully, returning 401 instead of an unhandled 500 error.
+  (#e7efa1e)
+
 ## [1.15.2] - 2026-06-25
 
 ### Fixed
