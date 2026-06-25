@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.4] - 2026-06-25
+
+### Security
+
+- Secrets scanner now caps line scanning at 10 000 characters, preventing
+  regex ReDoS on minified files or generated content with very long lines
+  while still detecting secrets anywhere in realistic source code.
+  (#7d0dbf9)
+- Nuxt route middleware now catches unexpected errors during session
+  retrieval and redirects to the login page instead of crashing during
+  server-side rendering. (#7d0dbf9)
+
 ## [1.15.3] - 2026-06-25
 
 ### Security
