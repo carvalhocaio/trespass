@@ -165,9 +165,6 @@ function isFalsePositive(match: string): boolean {
   return IGNORE_PATTERNS.some((p) => p.test(match));
 }
 
-/** Lines longer than this are truncated before scanning to avoid regex ReDoS on huge lines. */
-const MAX_LINE_LENGTH = 2000;
-
 function isCommentLine(line: string): boolean {
   const trimmed = line.trimStart();
   return (
@@ -192,14 +189,11 @@ export function scanFileForSecrets(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
 
-    const scannedLine =
-      line.length > MAX_LINE_LENGTH ? line.slice(0, MAX_LINE_LENGTH) : line;
-
-    const inComment = isCommentLine(scannedLine);
+    const inComment = isCommentLine(line);
 
     for (const pattern of PATTERNS) {
       pattern.regex.lastIndex = 0;
-      const matchResult = pattern.regex.exec(scannedLine);
+      const matchResult = pattern.regex.exec(line);
       if (!matchResult) {
         continue;
       }
@@ -221,7 +215,7 @@ export function scanFileForSecrets(
         inComment,
         severity: pattern.severity,
         line: i + 1,
-        snippet: scannedLine.trim().slice(0, 200),
+        snippet: line.trim().slice(0, 200),
         remediation: pattern.remediation,
       });
     }
