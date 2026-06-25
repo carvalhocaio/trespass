@@ -42,6 +42,9 @@ export class UnsupportedModelError extends Error {
 /** Letters, digits, dots, underscores and hyphens — no URL metacharacters. */
 const SAFE_MODEL_PATTERN = /^[A-Za-z0-9._-]+$/;
 
+const CODE_FENCE_START = /^```(?:json)?\s*/im;
+const CODE_FENCE_END = /\s*```\s*$/m;
+
 function assertSafeModelName(model: string): void {
   if (!SAFE_MODEL_PATTERN.test(model)) {
     throw new UnsupportedModelError(model);
@@ -216,6 +219,19 @@ function callLlm(config: LlmConfig, userMessage: string): Promise<string> {
   }
 }
 
+function extractJson(raw: string): string {
+  const stripped = raw
+    .replace(CODE_FENCE_START, "")
+    .replace(CODE_FENCE_END, "")
+    .trim();
+  const start = stripped.indexOf("{");
+  const end = stripped.lastIndexOf("}");
+  if (start === -1 || end === -1) {
+    return "{}";
+  }
+  return stripped.slice(start, end + 1);
+}
+
 /** Max characters per file chunk sent to the LLM */
 const CHUNK_CHARS = 6000;
 /** Max chunks per file — caps LLM calls at ~30 KB per file */
@@ -272,7 +288,8 @@ export async function reviewFileWithLlm(
 
     try {
       const raw = await callLlm(config, userMessage);
-      const parsed = llmResponseSchema.safeParse(JSON.parse(raw));
+      const jsonStr = extractJson(raw);
+      const parsed = llmResponseSchema.safeParse(JSON.parse(jsonStr));
       if (!parsed.success) {
         continue;
       }
