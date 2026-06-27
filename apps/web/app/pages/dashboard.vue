@@ -152,7 +152,9 @@ function severityColor(s: string) {
 <template>
   <div class="container mx-auto px-4 py-8 max-w-5xl">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div
+      class="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+    >
       <div>
         <h1 class="text-2xl font-bold font-mono text-foreground">Dashboard</h1>
         <p class="text-sm text-muted-foreground mt-0.5">
@@ -160,11 +162,11 @@ function severityColor(s: string) {
           <span class="text-foreground">{{ session.data?.user.name }}</span>
         </p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 w-full sm:w-auto">
         <Button
           variant="outline"
           size="sm"
-          class="border-border/50 font-mono text-xs gap-2"
+          class="border-border/50 font-mono text-xs gap-2 flex-1 justify-center sm:flex-none"
           :disabled="syncing"
           @click="syncRepos"
         >
@@ -174,7 +176,7 @@ function severityColor(s: string) {
         <Button
           size="sm"
           as-child
-          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs gap-2"
+          class="bg-primary text-primary-foreground hover:bg-primary/90 font-mono text-xs gap-2 flex-1 justify-center sm:flex-none"
         >
           <NuxtLink to="/settings">
             <Settings2 class="h-3.5 w-3.5" />

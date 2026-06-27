@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eye, EyeOff, KeyRound, Lock, Save } from "lucide-vue-next";
+import { ArrowLeft, Eye, EyeOff, KeyRound, Lock, Save } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
 useHead({ title: "Settings — Trespass" });
@@ -89,6 +89,19 @@ onMounted(fetchStatus);
 
 <template>
   <div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="flex items-center gap-3 mb-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        as-child
+        class="text-muted-foreground hover:text-foreground"
+      >
+        <NuxtLink to="/dashboard">
+          <ArrowLeft class="h-4 w-4 mr-1" />
+          Back
+        </NuxtLink>
+      </Button>
+    </div>
     <div class="mb-8">
       <h1 class="text-2xl font-bold font-mono text-foreground">Settings</h1>
       <p class="text-sm text-muted-foreground mt-0.5">

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.8] - 2026-06-27
+
+### Improved
+
+- Dashboard header buttons (Sync Repos, Configure) stack below the title on mobile and use full screen width.
+- Scan detail page action buttons (Re-scan, Stop, GitHub) stack below the repository name on mobile and use full screen width.
+- Settings page now shows a Back button linking to the Dashboard.
+
 ## [1.15.7] - 2026-06-25
 
 ### Improved

@@ -351,7 +351,9 @@ function elapsed(
     <template v-else-if="scan">
       <!-- Scan header -->
       <div class="mb-8">
-        <div class="flex items-start justify-between gap-4 mb-4">
+        <div
+          class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+        >
           <div>
             <h1 class="text-2xl font-bold font-mono text-foreground">
               {{ scan.repo.fullName }}
@@ -369,12 +371,12 @@ function elapsed(
               </span>
             </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-2 w-full sm:w-auto sm:shrink-0">
             <Button
               v-if="scan.status === 'queued' || scan.status === 'running'"
               size="sm"
               variant="outline"
-              class="border-destructive/40 text-destructive hover:bg-destructive/10 font-mono text-xs gap-1.5"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10 font-mono text-xs gap-1.5 flex-1 justify-center sm:flex-none"
               :disabled="stopping"
               @click="stopScan"
             >
@@ -383,7 +385,7 @@ function elapsed(
             </Button>
             <Button
               size="sm"
-              class="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5"
+              class="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-mono text-xs gap-1.5 flex-1 justify-center sm:flex-none"
               :disabled="rescanning || scan.status === 'queued' || scan.status === 'running'"
               @click="rescan"
             >
@@ -395,11 +397,12 @@ function elapsed(
               :href="scan.repo.htmlUrl"
               target="_blank"
               rel="noopener noreferrer"
+              class="flex-1 sm:flex-none"
             >
               <Button
                 variant="outline"
                 size="sm"
-                class="border-border/50 font-mono text-xs gap-1.5"
+                class="border-border/50 font-mono text-xs gap-1.5 w-full justify-center sm:w-auto"
               >
                 <ExternalLink class="h-3.5 w-3.5" />
                 GitHub
