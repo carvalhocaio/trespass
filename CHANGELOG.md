@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.9] - 2026-06-27
+
+### Added
+
+- New `/about` page detailing the four scanner layers: secrets detection (16 patterns), SAST (21 patterns), dependency auditing via OSV.dev, and optional LLM code review.
+- "About" navigation link added to the header alongside Dashboard.
+
 ## [1.15.8] - 2026-06-27
 
 ### Improved

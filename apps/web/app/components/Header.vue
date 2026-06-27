@@ -5,7 +5,10 @@ import UserMenu from "./UserMenu.vue";
 
 const route = useRoute();
 
-const navLinks = [{ label: "Dashboard", to: "/dashboard" }];
+const navLinks = [
+  { label: "Dashboard", to: "/dashboard" },
+  { label: "About", to: "/about" },
+];
 </script>
 
 <template>
