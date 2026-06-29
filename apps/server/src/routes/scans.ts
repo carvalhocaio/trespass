@@ -2,7 +2,7 @@ import { createCrypto } from "@trespass/crypto";
 import { createDb } from "@trespass/db";
 import { finding, repository, scan, userSecret } from "@trespass/db/schema/app";
 import { env } from "@trespass/env/server";
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, gte, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { nanoid } from "nanoid";
@@ -11,6 +11,13 @@ import { runScan } from "../services/scanner/index";
 import type { AppEnv } from "../types";
 
 const crypto = createCrypto(env.SECRET_ENCRYPTION_KEY);
+
+// Máximo de scans simultâneos por usuário (queued + running)
+const MAX_CONCURRENT_SCANS = 3;
+// Janela de 24h para scans com LLM
+const LLM_DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
+// Máximo de scans com LLM por janela de 24h por usuário
+const MAX_LLM_SCANS_PER_DAY = 10;
 
 const createScanSchema = z.object({
   repoId: z.string().min(1),
@@ -205,6 +212,38 @@ export const scansRoute = new Hono<AppEnv>()
             model: secret.llmModel,
           }
         : null;
+
+    // Verificar limite de scans simultâneos ativos
+    const activeScans = await db
+      .select({ id: scan.id })
+      .from(scan)
+      .where(
+        and(
+          eq(scan.userId, user.id),
+          or(eq(scan.status, "queued"), eq(scan.status, "running"))
+        )
+      );
+
+    if (activeScans.length >= MAX_CONCURRENT_SCANS) {
+      throw new HTTPException(429, {
+        message: `You already have ${activeScans.length} active scan(s). Wait for them to finish before starting a new one.`,
+      });
+    }
+
+    // Verificar limite diário de scans com LLM quando o usuário tem LLM configurado e ativado
+    if (llmConfig !== null) {
+      const since = new Date(Date.now() - LLM_DAILY_WINDOW_MS);
+      const recentScans = await db
+        .select({ id: scan.id })
+        .from(scan)
+        .where(and(eq(scan.userId, user.id), gte(scan.createdAt, since)));
+
+      if (recentScans.length >= MAX_LLM_SCANS_PER_DAY) {
+        throw new HTTPException(429, {
+          message: `You have reached the limit of ${MAX_LLM_SCANS_PER_DAY} LLM-enriched scans per day. Disable LLM review or try again tomorrow.`,
+        });
+      }
+    }
 
     // Create the scan row
     const scanId = nanoid();
