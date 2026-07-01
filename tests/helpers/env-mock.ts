@@ -6,4 +6,5 @@ export const TEST_ENV = {
   GITHUB_CLIENT_ID: "test",
   GITHUB_CLIENT_SECRET: "test",
   SECRET_ENCRYPTION_KEY: "a".repeat(64),
+  LOG_LEVEL: "silent",
 };
