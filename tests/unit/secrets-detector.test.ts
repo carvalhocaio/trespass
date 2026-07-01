@@ -2,6 +2,15 @@ import { scanFileForSecrets } from "@server/services/scanner/secrets-detector";
 import { describe, expect, it } from "vitest";
 
 describe("scanFileForSecrets", () => {
+  it("truncates very long lines before scanning", () => {
+    // A line longer than MAX_LINE_LENGTH (10k) exercises the slice branch;
+    // the AWS key near the start is still detected after truncation.
+    const padding = "x".repeat(11_000);
+    const content = `const key = "AKIAZQ3WVBFGHI3JKLMN"; // ${padding}`;
+    const results = scanFileForSecrets(content, "config.ts");
+    expect(results.length).toBeGreaterThanOrEqual(1);
+  });
+
   it("detects AWS access key", () => {
     // Valid 20-char AWS key that doesn't trigger false-positive filter
     const content = `const key = "${"AKIA"}ZQ3WVBFGHI3JKLMN"`;

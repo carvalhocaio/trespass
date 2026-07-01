@@ -190,6 +190,7 @@ export function scanFileForSecrets(
   const seen = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
+    /* v8 ignore next -- i is always in range; `?? ""` never triggers. */
     const line = lines[i] ?? "";
 
     const scannedLine =
@@ -210,9 +211,12 @@ export function scanFileForSecrets(
       }
 
       const dedupeKey = `${filePath}:${i + 1}:${pattern.name}`;
+      /* v8 ignore start -- defensive: pattern names are unique, so a given
+         (file, line, pattern) can only be seen once per scan. */
       if (seen.has(dedupeKey)) {
         continue;
       }
+      /* v8 ignore stop */
       seen.add(dedupeKey);
 
       matches.push({

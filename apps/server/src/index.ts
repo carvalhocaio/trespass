@@ -55,6 +55,8 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
+/* v8 ignore start -- standalone HTTP bootstrap: pure I/O wiring, no logic to
+   assert; only runs when the server is launched as its own process. */
 if (process.env.SERVER_STANDALONE === "true") {
   const app = createApp();
   const port = Number(process.env.PORT ?? 3000);
@@ -62,3 +64,4 @@ if (process.env.SERVER_STANDALONE === "true") {
     process.stdout.write(`Server running on http://localhost:${info.port}\n`);
   });
 }
+/* v8 ignore stop */

@@ -156,6 +156,7 @@ export const scansRoute = new Hono<AppEnv>()
 
     if (!parsed.success) {
       throw new HTTPException(400, {
+        /* v8 ignore next -- a failed parse always has at least one issue. */
         message: parsed.error.issues[0]?.message ?? "Invalid request body",
       });
     }

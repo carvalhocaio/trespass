@@ -208,6 +208,8 @@ const PATTERNS: SastPattern[] = [
 ];
 
 function getExtension(filePath: string): string {
+  // split always yields a non-empty array, so the pop()/?? guards never fire.
+  /* v8 ignore next */
   return filePath.split(".").pop()?.toLowerCase() ?? "";
 }
 
@@ -224,6 +226,7 @@ export function scanFileForPatterns(
   const seen = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
+    /* v8 ignore next -- i is always in range; `?? ""` never triggers. */
     const line = lines[i] ?? "";
 
     for (const pattern of PATTERNS) {
@@ -236,9 +239,12 @@ export function scanFileForPatterns(
       }
 
       const dedupeKey = `${filePath}:${i + 1}:${pattern.id}`;
+      /* v8 ignore start -- defensive: pattern ids are unique, so a given
+         (file, line, pattern) can only be seen once per scan. */
       if (seen.has(dedupeKey)) {
         continue;
       }
+      /* v8 ignore stop */
       seen.add(dedupeKey);
 
       matches.push({

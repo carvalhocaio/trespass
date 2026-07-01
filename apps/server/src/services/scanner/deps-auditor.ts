@@ -111,6 +111,8 @@ export function parsePythonDeps(
       if (!match) {
         return null;
       }
+      // Both capture groups are required, so they are present on any match.
+      /* v8 ignore next */
       return { name: match[1] ?? "", version: match[2] ?? "" };
     })
     .filter((d): d is { name: string; version: string } => d !== null);

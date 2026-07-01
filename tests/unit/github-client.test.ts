@@ -95,6 +95,8 @@ describe("getFileTree", () => {
         tree: [
           { path: "src/a.ts", type: "blob", sha: "sha-a", size: 10 },
           { path: "src", type: "tree", sha: "sha-dir" },
+          // Entry without a sha exercises the `?? ""` fallback.
+          { path: "src/b.ts", type: "blob" },
           { path: undefined, type: "blob", sha: "no-path" },
           { path: "commit", type: "commit", sha: "sha-c" },
         ],
@@ -107,6 +109,7 @@ describe("getFileTree", () => {
     expect(entries).toEqual([
       { path: "src/a.ts", type: "blob", sha: "sha-a", size: 10 },
       { path: "src", type: "tree", sha: "sha-dir", size: undefined },
+      { path: "src/b.ts", type: "blob", sha: "", size: undefined },
     ]);
   });
 

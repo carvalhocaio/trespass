@@ -302,6 +302,7 @@ export async function reviewFileWithLlm(
     : "NOTE: This is production source code.";
 
   for (let chunkIdx = 0; chunkIdx < chunks.length; chunkIdx++) {
+    /* v8 ignore next -- chunkIdx is always in range; `?? ""` never triggers. */
     const chunk = chunks[chunkIdx] ?? "";
     const lineOffset = content
       .slice(0, chunkIdx * CHUNK_CHARS)
