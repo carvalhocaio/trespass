@@ -3,8 +3,9 @@ import { auth } from "@trespass/auth";
 import { env } from "@trespass/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
+import { logger as honoLogger } from "hono/logger";
 
+import { logger } from "./lib/logger";
 import { requireAuth } from "./middleware/auth";
 import { issuesRoute } from "./routes/issues";
 import { reposRoute } from "./routes/repos";
@@ -15,7 +16,7 @@ import type { AppEnv } from "./types";
 export function createApp() {
   const app = new Hono();
 
-  app.use(logger());
+  app.use(honoLogger());
   app.use(
     "/*",
     cors({
@@ -46,11 +47,11 @@ export function createApp() {
 }
 
 process.on("unhandledRejection", (reason) => {
-  console.error("[unhandledRejection]", reason);
+  logger.error({ reason }, "unhandledRejection");
 });
 
 process.on("uncaughtException", (err) => {
-  console.error("[uncaughtException]", err);
+  logger.fatal({ err }, "uncaughtException");
   process.exit(1);
 });
 

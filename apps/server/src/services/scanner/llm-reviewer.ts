@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../../lib/logger";
 
 export interface LlmConfig {
   apiKey: string;
@@ -143,9 +144,9 @@ async function callOpenAI(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(
-      `[llm-reviewer] OpenAI API error ${res.status}:`,
-      body.slice(0, 200)
+    logger.error(
+      { provider: "openai", status: res.status, body: body.slice(0, 200) },
+      "LLM API error"
     );
     throw new Error(`OpenAI API error (HTTP ${res.status})`);
   }
@@ -181,9 +182,9 @@ async function callAnthropic(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(
-      `[llm-reviewer] Anthropic API error ${res.status}:`,
-      body.slice(0, 200)
+    logger.error(
+      { provider: "anthropic", status: res.status, body: body.slice(0, 200) },
+      "LLM API error"
     );
     throw new Error(`Anthropic API error (HTTP ${res.status})`);
   }
@@ -224,9 +225,9 @@ async function callGoogle(
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(
-      `[llm-reviewer] Google Gemini API error ${res.status}:`,
-      body.slice(0, 200)
+    logger.error(
+      { provider: "google", status: res.status, body: body.slice(0, 200) },
+      "LLM API error"
     );
     throw new Error(`Google Gemini API error (HTTP ${res.status})`);
   }
